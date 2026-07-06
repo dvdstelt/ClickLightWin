@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.Windows.Forms; // NotifyIcon, ContextMenuStrip
 
 namespace ClickLightWin.Tray;
@@ -11,6 +10,7 @@ namespace ClickLightWin.Tray;
 public sealed class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _icon;
+    private readonly System.Drawing.Icon _iconImage;
 
     public event Action? ToggleRequested;
     public event Action? QuitRequested;
@@ -24,9 +24,10 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Quit", null, (_, _) => QuitRequested?.Invoke());
 
+        _iconImage = AppIconFactory.CreatePulseIcon();
         _icon = new NotifyIcon
         {
-            Icon = SystemIcons.Application, // replace with a real .ico asset before release
+            Icon = _iconImage,
             Text = "ClickLight",
             Visible = true,
             ContextMenuStrip = menu
@@ -37,5 +38,6 @@ public sealed class TrayIcon : IDisposable
     {
         _icon.Visible = false;
         _icon.Dispose();
+        _iconImage.Dispose();
     }
 }
