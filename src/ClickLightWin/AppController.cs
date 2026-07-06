@@ -1,5 +1,6 @@
 using ClickLightWin.Overlay;
 using ClickLightWin.Tray;
+using ClickLightWin.Views;
 using Application = System.Windows.Application;
 
 namespace ClickLightWin;
@@ -20,14 +21,23 @@ public sealed class AppController : IDisposable
     private Settings _settings = new();
     private TrayIcon? _tray;
     private OverlayManager? _overlays;
+    private SettingsWindow? _settingsWindow;
 
     public void Start()
     {
         _settings = _settingsStore.Load();
+        // Keep the tray checkmark in sync however Enabled changes (menu, hotkey, or
+        // the settings window binding).
+        _settings.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(Settings.Enabled))
+                _tray?.SetEnabled(_settings.Enabled);
+        };
 
         _tray = new TrayIcon(_settings.Enabled, _launchAtLogin.IsEnabled);
         _tray.ToggleRequested += ToggleEnabled;
         _tray.LaunchAtLoginRequested += ToggleLaunchAtLogin;
+        _tray.SettingsRequested += ShowSettings;
         _tray.QuitRequested += () => Application.Current.Shutdown();
 
         // One overlay per monitor; rebuilds itself on display changes.
@@ -53,13 +63,30 @@ public sealed class AppController : IDisposable
         _overlays?.Dispatch(click);
     }
 
-    // Single toggle path for both the tray menu and the global hotkey, so the
-    // enabled state, persisted setting, and menu checkmark never diverge.
+    // Single toggle path for both the tray menu and the global hotkey. The tray
+    // checkmark follows via the Settings.PropertyChanged subscription in Start.
     private void ToggleEnabled()
     {
         _settings.Enabled = !_settings.Enabled;
         _settingsStore.Save(_settings);
-        _tray?.SetEnabled(_settings.Enabled);
+    }
+
+    private void ShowSettings()
+    {
+        if (_settingsWindow is not null)
+        {
+            _settingsWindow.Activate();
+            return;
+        }
+
+        _settingsWindow = new SettingsWindow(_settings);
+        _settingsWindow.Closed += (_, _) =>
+        {
+            _settingsWindow = null;
+            _settingsStore.Save(_settings); // persist any edits made in the window
+        };
+        _settingsWindow.Show();
+        _settingsWindow.Activate();
     }
 
     private void ToggleLaunchAtLogin()

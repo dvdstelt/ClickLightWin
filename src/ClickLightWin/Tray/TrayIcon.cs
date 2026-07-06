@@ -16,6 +16,7 @@ public sealed class TrayIcon : IDisposable
 
     public event Action? ToggleRequested;
     public event Action? LaunchAtLoginRequested;
+    public event Action? SettingsRequested;
     public event Action? QuitRequested;
 
     public TrayIcon(bool initialEnabled, bool initialLaunchAtLogin)
@@ -33,6 +34,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_launchItem);
 
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("Settings...", null, (_, _) => SettingsRequested?.Invoke());
         menu.Items.Add("Quit", null, (_, _) => QuitRequested?.Invoke());
 
         _iconImage = AppIconFactory.CreatePulseIcon();

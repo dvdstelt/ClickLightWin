@@ -19,8 +19,8 @@ public sealed class Settings : INotifyPropertyChanged
 {
     private bool _enabled = true;
     private bool _showDrag = true;
-    private double _baseDiameterDips = 28;
-    private double _pulseDurationMs = 450;
+    private double _baseDiameterDips = 32;  // Medium preset
+    private double _pulseDurationMs = 480;  // Normal preset
 
     // ---- Persisted, user-editable -------------------------------------------
 

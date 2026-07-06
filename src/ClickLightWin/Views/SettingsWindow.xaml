@@ -1,0 +1,144 @@
+<Window x:Class="ClickLightWin.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:ClickLightWin"
+        Title="ClickLight Settings"
+        Width="400"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="True"
+        Background="#FFFFFF"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="ClearType">
+
+  <Window.Resources>
+    <SolidColorBrush x:Key="Accent" Color="#3B82F6" />
+    <SolidColorBrush x:Key="Text" Color="#1F2933" />
+    <SolidColorBrush x:Key="Muted" Color="#6B7280" />
+    <SolidColorBrush x:Key="Segment" Color="#F1F3F5" />
+    <SolidColorBrush x:Key="SegmentBorder" Color="#E3E6EA" />
+
+    <!-- Segmented single-select control (used for size and duration presets) -->
+    <Style x:Key="Segmented" TargetType="ListBox">
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+      <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+      <Setter Property="ItemsPanel">
+        <Setter.Value>
+          <ItemsPanelTemplate>
+            <UniformGrid Rows="1" />
+          </ItemsPanelTemplate>
+        </Setter.Value>
+      </Setter>
+      <Setter Property="ItemContainerStyle">
+        <Setter.Value>
+          <Style TargetType="ListBoxItem">
+            <Setter Property="Foreground" Value="{StaticResource Text}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+              <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                  <Border x:Name="seg" Background="{StaticResource Segment}"
+                          BorderBrush="{StaticResource SegmentBorder}" BorderThickness="1"
+                          CornerRadius="8" Margin="3,0" Padding="0,9">
+                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  </Border>
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                      <Setter TargetName="seg" Property="BorderBrush" Value="{StaticResource Accent}" />
+                    </Trigger>
+                    <Trigger Property="IsSelected" Value="True">
+                      <Setter TargetName="seg" Property="Background" Value="{StaticResource Accent}" />
+                      <Setter TargetName="seg" Property="BorderBrush" Value="{StaticResource Accent}" />
+                      <Setter Property="Foreground" Value="White" />
+                    </Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate>
+              </Setter.Value>
+            </Setter>
+          </Style>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="AccentButton" TargetType="Button">
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Background" Value="{StaticResource Accent}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="8" Padding="20,8">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="bg" Property="Background" Value="#2F6FE0" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="SectionLabel" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="2,0,0,6" />
+    </Style>
+
+    <Style x:Key="KeyCap" TargetType="Border">
+      <Setter Property="Background" Value="White" />
+      <Setter Property="BorderBrush" Value="{StaticResource SegmentBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="5" />
+      <Setter Property="Padding" Value="9,3" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+  </Window.Resources>
+
+  <StackPanel Margin="24,22">
+    <TextBlock Text="ClickLight" FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource Text}" />
+    <TextBlock Text="Highlight your mouse clicks on screen."
+               Foreground="{StaticResource Muted}" Margin="0,2,0,20" />
+
+    <TextBlock Text="PULSE SIZE" Style="{StaticResource SectionLabel}" />
+    <ListBox Style="{StaticResource Segmented}"
+             ItemsSource="{x:Static local:Presets.Sizes}"
+             DisplayMemberPath="Title" SelectedValuePath="Value"
+             SelectedValue="{Binding BaseDiameterDips, Mode=TwoWay}"
+             Margin="0,0,0,20" />
+
+    <TextBlock Text="PULSE DURATION" Style="{StaticResource SectionLabel}" />
+    <ListBox Style="{StaticResource Segmented}"
+             ItemsSource="{x:Static local:Presets.Durations}"
+             DisplayMemberPath="Title" SelectedValuePath="Value"
+             SelectedValue="{Binding PulseDurationMs, Mode=TwoWay}"
+             Margin="0,0,0,20" />
+
+    <CheckBox Content="Show drag trail" IsChecked="{Binding ShowDrag}"
+              Foreground="{StaticResource Text}" Margin="2,0,0,20" />
+
+    <Border Background="{StaticResource Segment}" CornerRadius="8" Padding="14,12" Margin="0,0,0,20">
+      <StackPanel>
+        <TextBlock Text="TOGGLE SHORTCUT" Style="{StaticResource SectionLabel}" Margin="0,0,0,8" />
+        <StackPanel Orientation="Horizontal">
+          <Border Style="{StaticResource KeyCap}"><TextBlock Text="Ctrl" Foreground="{StaticResource Text}" /></Border>
+          <TextBlock Text="+" Foreground="{StaticResource Muted}" VerticalAlignment="Center" Margin="6,0" />
+          <Border Style="{StaticResource KeyCap}"><TextBlock Text="Alt" Foreground="{StaticResource Text}" /></Border>
+          <TextBlock Text="+" Foreground="{StaticResource Muted}" VerticalAlignment="Center" Margin="6,0" />
+          <Border Style="{StaticResource KeyCap}"><TextBlock Text="L" Foreground="{StaticResource Text}" /></Border>
+        </StackPanel>
+        <TextBlock Text="Rebinding coming soon." Foreground="{StaticResource Muted}" FontSize="11" Margin="0,10,0,0" />
+      </StackPanel>
+    </Border>
+
+    <Button Content="Close" Style="{StaticResource AccentButton}"
+            HorizontalAlignment="Right" IsCancel="True" Click="OnCloseClick" />
+  </StackPanel>
+</Window>
