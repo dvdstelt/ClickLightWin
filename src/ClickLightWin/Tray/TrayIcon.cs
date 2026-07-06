@@ -11,6 +11,7 @@ public sealed class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _icon;
     private readonly System.Drawing.Icon _iconImage;
+    private readonly ToolStripMenuItem _toggleItem;
 
     public event Action? ToggleRequested;
     public event Action? QuitRequested;
@@ -18,9 +19,11 @@ public sealed class TrayIcon : IDisposable
     public TrayIcon(bool initialEnabled)
     {
         var menu = new ContextMenuStrip();
-        var toggle = new ToolStripMenuItem("Enabled") { Checked = initialEnabled, CheckOnClick = true };
-        toggle.Click += (_, _) => ToggleRequested?.Invoke();
-        menu.Items.Add(toggle);
+        // No CheckOnClick: AppController owns the enabled state and drives the
+        // checkmark via SetEnabled, so the hotkey and the menu stay in sync.
+        _toggleItem = new ToolStripMenuItem("Enabled") { Checked = initialEnabled };
+        _toggleItem.Click += (_, _) => ToggleRequested?.Invoke();
+        menu.Items.Add(_toggleItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Quit", null, (_, _) => QuitRequested?.Invoke());
 
@@ -33,6 +36,9 @@ public sealed class TrayIcon : IDisposable
             ContextMenuStrip = menu
         };
     }
+
+    /// <summary>Reflect the current enabled state in the menu checkmark.</summary>
+    public void SetEnabled(bool enabled) => _toggleItem.Checked = enabled;
 
     public void Dispose()
     {
