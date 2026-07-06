@@ -1,0 +1,12 @@
+# macOS reference clone, kept locally for reference only
+/ClickLight/
+
+# .NET build output
+bin/
+obj/
+.vs/
+*.user
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
