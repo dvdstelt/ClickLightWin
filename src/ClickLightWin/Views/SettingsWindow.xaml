@@ -92,6 +92,48 @@
       <Setter Property="Margin" Value="2,0,0,6" />
     </Style>
 
+    <!-- Horizontal color swatch picker -->
+    <Style x:Key="SwatchPicker" TargetType="ListBox">
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+      <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+      <Setter Property="ItemsPanel">
+        <Setter.Value>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" />
+          </ItemsPanelTemplate>
+        </Setter.Value>
+      </Setter>
+      <Setter Property="ItemContainerStyle">
+        <Setter.Value>
+          <Style TargetType="ListBoxItem">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+              <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                  <Border x:Name="ring" Width="34" Height="34" CornerRadius="17" Margin="0,0,8,0"
+                          BorderThickness="2" BorderBrush="Transparent">
+                    <Border Width="24" Height="24" CornerRadius="12" Background="{Binding Brush}" />
+                  </Border>
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                      <Setter TargetName="ring" Property="BorderBrush" Value="{StaticResource SegmentBorder}" />
+                    </Trigger>
+                    <Trigger Property="IsSelected" Value="True">
+                      <Setter TargetName="ring" Property="BorderBrush" Value="{StaticResource Text}" />
+                    </Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate>
+              </Setter.Value>
+            </Setter>
+          </Style>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
     <Style x:Key="KeyCap" TargetType="Border">
       <Setter Property="Background" Value="White" />
       <Setter Property="BorderBrush" Value="{StaticResource SegmentBorder}" />
@@ -120,6 +162,21 @@
              DisplayMemberPath="Title" SelectedValuePath="Value"
              SelectedValue="{Binding PulseDurationMs, Mode=TwoWay}"
              Margin="0,0,0,20" />
+
+    <TextBlock Text="LEFT CLICK COLOR" Style="{StaticResource SectionLabel}" />
+    <ListBox Style="{StaticResource SwatchPicker}"
+             ItemsSource="{x:Static local:Palette.Colors}" SelectedValuePath="Hex"
+             SelectedValue="{Binding LeftColorHex, Mode=TwoWay}" Margin="0,0,0,16" />
+
+    <TextBlock Text="RIGHT CLICK COLOR" Style="{StaticResource SectionLabel}" />
+    <ListBox Style="{StaticResource SwatchPicker}"
+             ItemsSource="{x:Static local:Palette.Colors}" SelectedValuePath="Hex"
+             SelectedValue="{Binding RightColorHex, Mode=TwoWay}" Margin="0,0,0,16" />
+
+    <TextBlock Text="MIDDLE CLICK COLOR" Style="{StaticResource SectionLabel}" />
+    <ListBox Style="{StaticResource SwatchPicker}"
+             ItemsSource="{x:Static local:Palette.Colors}" SelectedValuePath="Hex"
+             SelectedValue="{Binding MiddleColorHex, Mode=TwoWay}" Margin="0,0,0,20" />
 
     <CheckBox Content="Show drag trail" IsChecked="{Binding ShowDrag}"
               Foreground="{StaticResource Text}" Margin="2,0,0,20" />

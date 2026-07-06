@@ -21,6 +21,9 @@ public sealed class Settings : INotifyPropertyChanged
     private bool _showDrag = true;
     private double _baseDiameterDips = 32;  // Medium preset
     private double _pulseDurationMs = 480;  // Normal preset
+    private string _leftColorHex = "#3B82F6";   // blue
+    private string _rightColorHex = "#F97316";  // orange
+    private string _middleColorHex = "#22C55E"; // green
 
     // ---- Persisted, user-editable -------------------------------------------
 
@@ -28,6 +31,9 @@ public sealed class Settings : INotifyPropertyChanged
     public bool ShowDrag { get => _showDrag; set => Set(ref _showDrag, value); }
     public double BaseDiameterDips { get => _baseDiameterDips; set => Set(ref _baseDiameterDips, value); }
     public double PulseDurationMs { get => _pulseDurationMs; set => Set(ref _pulseDurationMs, value); }
+    public string LeftColorHex { get => _leftColorHex; set => Set(ref _leftColorHex, value); }
+    public string RightColorHex { get => _rightColorHex; set => Set(ref _rightColorHex, value); }
+    public string MiddleColorHex { get => _middleColorHex; set => Set(ref _middleColorHex, value); }
 
     // ---- Computed render constants (not persisted, not user-editable yet) ----
 
@@ -40,13 +46,25 @@ public sealed class Settings : INotifyPropertyChanged
     [JsonIgnore] public double DragMinSpacingDips => 6;
     [JsonIgnore] public Color DragColor => Color.FromRgb(0xEB, 0xD6, 0x38); // yellow
 
-    public Color ColorFor(ClickButton button) => button switch
+    public Color ColorFor(ClickButton button) => ParseHex(button switch
     {
-        ClickButton.Left => Color.FromRgb(0x3B, 0x82, 0xF6),   // blue
-        ClickButton.Right => Color.FromRgb(0xF9, 0x73, 0x16),  // orange
-        ClickButton.Middle => Color.FromRgb(0x22, 0xC5, 0x5E), // green
-        _ => Colors.White
-    };
+        ClickButton.Left => _leftColorHex,
+        ClickButton.Right => _rightColorHex,
+        ClickButton.Middle => _middleColorHex,
+        _ => "#FFFFFF"
+    });
+
+    private static Color ParseHex(string hex)
+    {
+        try
+        {
+            return (Color)System.Windows.Media.ColorConverter.ConvertFromString(hex);
+        }
+        catch
+        {
+            return Colors.White; // tolerate a hand-edited or malformed value
+        }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
