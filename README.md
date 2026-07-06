@@ -37,8 +37,25 @@ Grab the latest from the [Releases](../../releases) page. Two options:
 - **`ClickLight-vX.Y.Z-win-x64.exe`** (bare app, ~250 KB) — for machines that already
   have the .NET 10 Desktop Runtime. Just run it.
 
-Both are unsigned, so on first launch Windows SmartScreen may say "Windows protected your
-PC" — click **More info -> Run anyway**.
+Until code signing is set up (see below), both are unsigned, so on first launch Windows
+SmartScreen may say "Windows protected your PC" — click **More info -> Run anyway**.
+
+## Code signing
+
+The release workflow signs both downloads with [SignPath](https://signpath.io) (free for
+open-source projects), which removes the "Unknown publisher" warning. The signing steps
+stay dormant until the repository is configured, so releases still build unsigned in the
+meantime. To enable it:
+
+1. Create a free SignPath account and connect this GitHub repository.
+2. In SignPath, define a **project**, an **artifact configuration** that signs the two
+   `.exe` files, and a **signing policy** (e.g. `release-signing`).
+3. Add a repository **secret** `SIGNPATH_API_TOKEN`, and repository **variables**
+   `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG`, `SIGNPATH_SIGNING_POLICY_SLUG`,
+   and `SIGNPATH_ARTIFACT_CONFIG_SLUG`.
+4. Push a new tag — the release assets will be signed automatically.
+
+SignPath's free plan requires an OSS license (this project is MIT) and a public repo.
 
 ## Requirements (to build)
 

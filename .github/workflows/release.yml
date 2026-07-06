@@ -4,6 +4,10 @@ name: Release
 # Two assets are produced:
 #   * ClickLight-vX.Y.Z-win-x64.exe  - small framework-dependent app (needs .NET 10 installed)
 #   * ClickLight-vX.Y.Z-Setup.exe    - installer that also installs .NET 10 if it is missing
+#
+# Code signing (SignPath, free for open-source) is applied automatically once the
+# repository is configured for it. The signing steps are skipped until then, so an
+# unsigned release still builds. See the "Code signing" section in the README for setup.
 on:
   push:
     tags: [ 'v*' ]
@@ -55,9 +59,31 @@ jobs:
           Copy-Item single/ClickLightWin.exe "assets/ClickLight-${{ github.ref_name }}-win-x64.exe"
           Copy-Item releases/ClickLight-win-Setup.exe "assets/ClickLight-${{ github.ref_name }}-Setup.exe"
 
+      # ---- Code signing via SignPath (skipped until repo variables are set) ----
+      - name: Upload unsigned assets for signing
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        id: unsigned
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-assets
+          path: assets
+
+      - name: Sign with SignPath
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIG_SLUG }}
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: assets # overwrites the staged files with signed ones
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: assets/*
+          files: assets/*.exe
           generate_release_notes: true
           fail_on_unmatched_files: true
