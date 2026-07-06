@@ -27,21 +27,19 @@ public sealed class AppController : IDisposable
     {
         _settings = _settingsStore.Load();
         _hook.EmitMoves = _settings.ShowLaserPointer; // only track moves when the laser needs them
-        // React to settings changes: keep the tray checkmark in sync however Enabled
-        // changes (menu, hotkey, or window), and start/stop move tracking with the laser.
+        // Start/stop move tracking whenever the laser toggles (from tray or window).
         _settings.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName == nameof(Settings.Enabled))
-                _tray?.SetEnabled(_settings.Enabled);
-            else if (e.PropertyName == nameof(Settings.ShowLaserPointer))
+            if (e.PropertyName == nameof(Settings.ShowLaserPointer))
                 _hook.EmitMoves = _settings.ShowLaserPointer;
         };
 
-        _tray = new TrayIcon(_settings.Enabled, _launchAtLogin.IsEnabled);
-        _tray.ToggleRequested += ToggleEnabled;
-        _tray.LaunchAtLoginRequested += ToggleLaunchAtLogin;
-        _tray.SettingsRequested += ShowSettings;
-        _tray.QuitRequested += () => Application.Current.Shutdown();
+        // The tray menu mutates the shared settings directly and refreshes its
+        // checkmarks on open, so no per-item sync is needed here.
+        _tray = new TrayIcon(_settings, _launchAtLogin,
+            persist: () => _settingsStore.Save(_settings),
+            openSettings: ShowSettings,
+            quit: () => Application.Current.Shutdown());
 
         // One overlay per monitor; rebuilds itself on display changes.
         _overlays = new OverlayManager(_settings);
@@ -92,8 +90,8 @@ public sealed class AppController : IDisposable
         }
     }
 
-    // Single toggle path for both the tray menu and the global hotkey. The tray
-    // checkmark follows via the Settings.PropertyChanged subscription in Start.
+    // The global hotkey path. The tray menu toggles Enabled on its own; both just
+    // mutate the shared settings, and the tray refreshes its checkmarks on open.
     private void ToggleEnabled()
     {
         _settings.Enabled = !_settings.Enabled;
@@ -116,13 +114,6 @@ public sealed class AppController : IDisposable
         };
         _settingsWindow.Show();
         _settingsWindow.Activate();
-    }
-
-    private void ToggleLaunchAtLogin()
-    {
-        var enabled = !_launchAtLogin.IsEnabled;
-        _launchAtLogin.SetEnabled(enabled);
-        _tray?.SetLaunchAtLogin(_launchAtLogin.IsEnabled);
     }
 
     public void Dispose()
