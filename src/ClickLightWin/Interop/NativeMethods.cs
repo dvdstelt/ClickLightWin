@@ -105,4 +105,14 @@ internal static partial class NativeMethods
     [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool UnregisterHotKey(nint hWnd, int id);
+
+    // ---- Live modifier-key state (for the Ctrl+Shift annotation gesture) -----
+
+    public const int VK_SHIFT = 0x10;
+    public const int VK_CONTROL = 0x11;
+
+    [LibraryImport("user32.dll")]
+    public static partial short GetAsyncKeyState(int vKey);
+
+    public static bool IsDown(int vKey) => (GetAsyncKeyState(vKey) & 0x8000) != 0;
 }

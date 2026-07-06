@@ -27,7 +27,7 @@ public sealed class TrayIcon : IDisposable
     private readonly List<(ToolStripMenuItem Item, double Value)> _durationItems = [];
 
     public TrayIcon(Settings settings, LaunchAtLoginController launchAtLogin,
-                    Action persist, Action openSettings, Action quit)
+                    Action persist, Action openSettings, Action clearAnnotations, Action quit)
     {
         _settings = settings;
         _launchAtLogin = launchAtLogin;
@@ -56,6 +56,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(PresetSubmenu("Size", Presets.Sizes, _sizeItems, v => _settings.BaseDiameterDips = v));
         menu.Items.Add(PresetSubmenu("Duration", Presets.Durations, _durationItems, v => _settings.PulseDurationMs = v));
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(Item("Clear annotations", clearAnnotations));
         menu.Items.Add(_launchItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(Item("Settings...", openSettings));
@@ -126,7 +127,7 @@ public sealed class TrayIcon : IDisposable
 
     private static void ShowAbout() => MessageBox.Show(
         "ClickLight for Windows\n\nHighlights your mouse clicks on screen during demos and "
-        + "screen sharing.\nToggle highlighting with Ctrl+Alt+L.",
+        + "screen sharing.\n\nCtrl+Shift+L  toggle\nCtrl+Shift + drag  draw an arrow\nCtrl+Shift+C  clear annotations",
         "About ClickLight", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
     public void Dispose()

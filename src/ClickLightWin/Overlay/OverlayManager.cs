@@ -27,10 +27,30 @@ public sealed class OverlayManager : IDisposable
     /// <summary>Route a laser event (physical pixels) to the overlay that contains it.</summary>
     public void DispatchLaser(ClickEvent click) => Find(click)?.Laser(click, _settings);
 
-    private OverlayWindow? Find(ClickEvent click)
+    // The overlay that owns the in-progress annotation gesture, so its update and
+    // commit stay on the monitor where the drag began even if the cursor crosses monitors.
+    private OverlayWindow? _annotatingOverlay;
+
+    public void DispatchAnnotation(AnnotationEvent evt)
+    {
+        if (evt.Phase == AnnotationPhase.Begin)
+            _annotatingOverlay = FindByPoint(evt.ScreenX, evt.ScreenY);
+        _annotatingOverlay?.Annotate(evt, _settings);
+        if (evt.Phase == AnnotationPhase.Commit)
+            _annotatingOverlay = null;
+    }
+
+    public void ClearAnnotations()
+    {
+        foreach (var overlay in _overlays) overlay.ClearAnnotations();
+    }
+
+    private OverlayWindow? Find(ClickEvent click) => FindByPoint(click.ScreenX, click.ScreenY);
+
+    private OverlayWindow? FindByPoint(int x, int y)
     {
         foreach (var overlay in _overlays)
-            if (overlay.ScreenBounds.Contains(click.ScreenX, click.ScreenY))
+            if (overlay.ScreenBounds.Contains(x, y))
                 return overlay;
         return null;
     }

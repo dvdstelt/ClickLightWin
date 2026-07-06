@@ -16,9 +16,10 @@ app runs headless apart from a tray icon; there is no main window.
 - Transparent, click-through, topmost overlay per monitor, DPI-correct (Per-Monitor v2)
 - Fading pulse on press, a contracting ring on hold + release, and a fading drag trail
 - **Laser-pointer mode**: a glowing cursor that trails the pointer plus a fading freehand stroke on drag
-- Per-button colors and Size/Duration presets
+- **Arrow annotations**: hold Ctrl+Shift and drag to draw a persistent arrow; Ctrl+Shift+C clears them
+- Per-button and arrow colors, Size/Duration presets
 - A modern settings window and a dark tray menu (feature toggles, preset submenus)
-- Global toggle hotkey **Ctrl+Alt+L**, launch-at-login, single-instance guard
+- Global toggle hotkey **Ctrl+Shift+L**, launch-at-login, single-instance guard
 - Settings persisted to `%APPDATA%\ClickLightWin\settings.json`
 
 See [docs/04-build-checklist.md](docs/04-build-checklist.md) for the roadmap this was built against.
@@ -72,7 +73,7 @@ dotnet run --project src\ClickLightWin\ClickLightWin.csproj
 ```
 
 The app starts in the tray. Click anywhere to see a pulse. Right-click the tray
-icon for the menu, or press **Ctrl+Alt+L** to toggle highlighting on and off.
+icon for the menu, or press **Ctrl+Shift+L** to toggle highlighting on and off.
 
 ## Known limitations
 

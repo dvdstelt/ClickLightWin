@@ -5,8 +5,9 @@ namespace ClickLightWin;
 
 /// <summary>
 /// System-wide low-level mouse hook. Raises <see cref="ClickDetected"/> on the
-/// UI thread for every button press, release, and drag. The Windows analogue of
-/// the macOS Quartz event tap in ClickEventTap.swift.
+/// UI thread for every button press, release, and drag, and <see cref="AnnotationDetected"/>
+/// for Ctrl+Shift annotation gestures (which it swallows so they never reach the
+/// app underneath). The Windows analogue of the macOS Quartz event tap.
 /// </summary>
 public sealed class LowLevelMouseHook : IDisposable
 {
@@ -16,7 +17,13 @@ public sealed class LowLevelMouseHook : IDisposable
     private nint _hookHandle;
     private bool _leftDown, _rightDown, _middleDown;
 
+    // In-progress Ctrl+Shift annotation gesture.
+    private bool _annotating;
+    private AnnotationTool _annotatingTool;
+    private int _annotatingUpMsg;
+
     public event Action<ClickEvent>? ClickDetected;
+    public event Action<AnnotationEvent>? AnnotationDetected;
 
     /// <summary>
     /// When true, plain mouse moves (no button held) are also raised as
@@ -24,6 +31,9 @@ public sealed class LowLevelMouseHook : IDisposable
     /// stream is only processed when a feature (the laser pointer) needs it.
     /// </summary>
     public bool EmitMoves { get; set; }
+
+    /// <summary>When true, Ctrl+Shift + drag draws annotations instead of clicking through.</summary>
+    public bool AnnotationsEnabled { get; set; }
 
     public LowLevelMouseHook() => _proc = HookCallback;
 
@@ -50,10 +60,54 @@ public sealed class LowLevelMouseHook : IDisposable
         {
             var data = Marshal.PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
             var msg = (int)wParam;
+
+            // Annotation gestures are swallowed so the drag never reaches the app.
+            if (HandleAnnotation(msg, data.pt.X, data.pt.Y))
+                return 1;
+
             if (TryMap(msg, data, out var click))
                 ClickDetected?.Invoke(click); // handler marshals to Dispatcher if needed
         }
         return NativeMethods.CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+    }
+
+    /// <summary>
+    /// Returns true if the event should be swallowed (kept from the app). We swallow
+    /// only the button down and up of an annotation gesture, never the moves: eating
+    /// WM_MOUSEMOVE in a low-level hook freezes the cursor. Because the app never sees
+    /// the button press, the passed-through moves are just hover and don't drag it.
+    /// </summary>
+    private bool HandleAnnotation(int msg, int x, int y)
+    {
+        if (_annotating)
+        {
+            if (msg == NativeMethods.WM_MOUSEMOVE)
+            {
+                AnnotationDetected?.Invoke(new(_annotatingTool, AnnotationPhase.Update, x, y));
+                return false; // let the move through so the cursor keeps moving
+            }
+            if (msg == _annotatingUpMsg)
+            {
+                AnnotationDetected?.Invoke(new(_annotatingTool, AnnotationPhase.Commit, x, y));
+                _annotating = false;
+                return true; // swallow the release
+            }
+            // Swallow any other button events mid-gesture; leave moves/wheel alone.
+            return msg is NativeMethods.WM_LBUTTONDOWN or NativeMethods.WM_RBUTTONDOWN
+                or NativeMethods.WM_MBUTTONDOWN or NativeMethods.WM_LBUTTONUP
+                or NativeMethods.WM_RBUTTONUP or NativeMethods.WM_MBUTTONUP;
+        }
+
+        if (!AnnotationsEnabled) return false;
+        var isDown = msg is NativeMethods.WM_LBUTTONDOWN or NativeMethods.WM_RBUTTONDOWN;
+        if (!isDown || !NativeMethods.IsDown(NativeMethods.VK_CONTROL) || !NativeMethods.IsDown(NativeMethods.VK_SHIFT))
+            return false;
+
+        _annotating = true;
+        _annotatingTool = msg == NativeMethods.WM_LBUTTONDOWN ? AnnotationTool.Arrow : AnnotationTool.Box;
+        _annotatingUpMsg = msg == NativeMethods.WM_LBUTTONDOWN ? NativeMethods.WM_LBUTTONUP : NativeMethods.WM_RBUTTONUP;
+        AnnotationDetected?.Invoke(new(_annotatingTool, AnnotationPhase.Begin, x, y));
+        return true; // swallow the press so the app never starts a selection/drag
     }
 
     private bool TryMap(int msg, NativeMethods.MSLLHOOKSTRUCT data, out ClickEvent click)

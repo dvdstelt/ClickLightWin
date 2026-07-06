@@ -18,6 +18,7 @@ public partial class OverlayWindow : Window
     private readonly Screen _screen;
     private readonly PulseRenderer _renderer;
     private LaserRenderer? _laser;
+    private AnnotationRenderer? _annotations;
 
     public OverlayWindow(Screen screen)
     {
@@ -46,10 +47,28 @@ public partial class OverlayWindow : Window
         }
     }
 
-    private Point ToLocal(ClickEvent click)
+    /// <summary>Drive an annotation (arrow) gesture for one event (physical pixels).</summary>
+    public void Annotate(AnnotationEvent evt, Settings settings)
+    {
+        _annotations ??= new AnnotationRenderer(PulseCanvas);
+        var local = ToLocal(evt.ScreenX, evt.ScreenY);
+        switch (evt.Phase)
+        {
+            case AnnotationPhase.Begin: _annotations.Begin(local); break;
+            case AnnotationPhase.Update: _annotations.Update(local, settings); break;
+            case AnnotationPhase.Commit: _annotations.Commit(local, settings); break;
+        }
+    }
+
+    /// <summary>Remove all committed annotations on this overlay.</summary>
+    public void ClearAnnotations() => _annotations?.Clear();
+
+    private Point ToLocal(ClickEvent click) => ToLocal(click.ScreenX, click.ScreenY);
+
+    private Point ToLocal(int physX, int physY)
     {
         var dpi = VisualTreeHelper.GetDpi(this);
-        return CoordinateMapper.PhysicalToLocalDips(click.ScreenX, click.ScreenY, _screen, dpi);
+        return CoordinateMapper.PhysicalToLocalDips(physX, physY, _screen, dpi);
     }
 
     /// <summary>Physical-pixel bounds of this overlay's monitor, for hit-testing.</summary>

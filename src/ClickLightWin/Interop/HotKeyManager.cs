@@ -4,21 +4,22 @@ using ClickLightWin.Interop;
 namespace ClickLightWin;
 
 /// <summary>
-/// Registers a system-wide toggle hotkey (Ctrl+Alt+L) on a message-only window
-/// and raises <see cref="TogglePressed"/> when it fires. The Windows analogue of
-/// HotKeyManager.swift, which uses Carbon RegisterEventHotKey on macOS.
+/// Registers the system-wide hotkeys on a message-only window: Ctrl+Shift+L to
+/// toggle ClickLight and Ctrl+Shift+C to clear annotations. The Windows analogue
+/// of HotKeyManager.swift, which uses Carbon RegisterEventHotKey on macOS.
 /// </summary>
 public sealed class HotKeyManager : IDisposable
 {
     private const int ToggleHotKeyId = 1;
-    private const uint VkL = 0x4C; // virtual-key code for 'L'
+    private const int ClearHotKeyId = 2;
+    private const uint VkL = 0x4C; // 'L'
+    private const uint VkC = 0x43; // 'C'
 
     private HwndSource? _source;
+    private bool _toggleRegistered, _clearRegistered;
 
     public event Action? TogglePressed;
-
-    /// <summary>Whether the hotkey registered successfully (false if another app owns it).</summary>
-    public bool IsRegistered { get; private set; }
+    public event Action? ClearPressed;
 
     public void Register()
     {
@@ -32,18 +33,18 @@ public sealed class HotKeyManager : IDisposable
         _source = new HwndSource(parameters);
         _source.AddHook(WndProc);
 
-        IsRegistered = NativeMethods.RegisterHotKey(
-            _source.Handle, ToggleHotKeyId,
-            NativeMethods.MOD_CONTROL | NativeMethods.MOD_ALT | NativeMethods.MOD_NOREPEAT,
-            VkL);
+        const uint mod = NativeMethods.MOD_CONTROL | NativeMethods.MOD_SHIFT | NativeMethods.MOD_NOREPEAT;
+        _toggleRegistered = NativeMethods.RegisterHotKey(_source.Handle, ToggleHotKeyId, mod, VkL);
+        _clearRegistered = NativeMethods.RegisterHotKey(_source.Handle, ClearHotKeyId, mod, VkC);
     }
 
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
     {
-        if (msg == NativeMethods.WM_HOTKEY && (int)wParam == ToggleHotKeyId)
+        if (msg != NativeMethods.WM_HOTKEY) return 0;
+        switch ((int)wParam)
         {
-            TogglePressed?.Invoke();
-            handled = true;
+            case ToggleHotKeyId: TogglePressed?.Invoke(); handled = true; break;
+            case ClearHotKeyId: ClearPressed?.Invoke(); handled = true; break;
         }
         return 0;
     }
@@ -51,8 +52,8 @@ public sealed class HotKeyManager : IDisposable
     public void Dispose()
     {
         if (_source is null) return;
-        if (IsRegistered)
-            NativeMethods.UnregisterHotKey(_source.Handle, ToggleHotKeyId);
+        if (_toggleRegistered) NativeMethods.UnregisterHotKey(_source.Handle, ToggleHotKeyId);
+        if (_clearRegistered) NativeMethods.UnregisterHotKey(_source.Handle, ClearHotKeyId);
         _source.RemoveHook(WndProc);
         _source.Dispose();
         _source = null;

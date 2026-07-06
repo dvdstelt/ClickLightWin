@@ -21,11 +21,13 @@ public sealed class Settings : INotifyPropertyChanged
     private bool _showDrag = true;
     private bool _showRelease = true;
     private bool _showLaserPointer = false;
+    private bool _enableAnnotations = true;
     private double _baseDiameterDips = 32;  // Medium preset
     private double _pulseDurationMs = 480;  // Normal preset
     private string _leftColorHex = "#3B82F6";   // blue
     private string _rightColorHex = "#F97316";  // orange
     private string _middleColorHex = "#22C55E"; // green
+    private string _arrowColorHex = "#EF4444";  // red
 
     // ---- Persisted, user-editable -------------------------------------------
 
@@ -33,11 +35,13 @@ public sealed class Settings : INotifyPropertyChanged
     public bool ShowDrag { get => _showDrag; set => Set(ref _showDrag, value); }
     public bool ShowRelease { get => _showRelease; set => Set(ref _showRelease, value); }
     public bool ShowLaserPointer { get => _showLaserPointer; set => Set(ref _showLaserPointer, value); }
+    public bool EnableAnnotations { get => _enableAnnotations; set => Set(ref _enableAnnotations, value); }
     public double BaseDiameterDips { get => _baseDiameterDips; set => Set(ref _baseDiameterDips, value); }
     public double PulseDurationMs { get => _pulseDurationMs; set => Set(ref _pulseDurationMs, value); }
     public string LeftColorHex { get => _leftColorHex; set => Set(ref _leftColorHex, value); }
     public string RightColorHex { get => _rightColorHex; set => Set(ref _rightColorHex, value); }
     public string MiddleColorHex { get => _middleColorHex; set => Set(ref _middleColorHex, value); }
+    public string ArrowColorHex { get => _arrowColorHex; set => Set(ref _arrowColorHex, value); }
 
     // ---- Computed render constants (not persisted, not user-editable yet) ----
 
@@ -74,6 +78,13 @@ public sealed class Settings : INotifyPropertyChanged
     [JsonIgnore] public double LaserMinSpacingDips => 3;
     [JsonIgnore] public int LaserIdleFadeMs => 130;      // hide the halo after movement stops
     [JsonIgnore] public Duration LaserStrokeFade => new(TimeSpan.FromMilliseconds(900));
+
+    // Arrow annotations: a persistent colored arrow with a dark outline for contrast.
+    [JsonIgnore] public Color ArrowColor => ParseHex(_arrowColorHex);
+    [JsonIgnore] public double ArrowThickness => 4;
+    [JsonIgnore] public double ArrowHeadLength => 18;
+    [JsonIgnore] public double ArrowHeadWidth => 15;
+    [JsonIgnore] public double ArrowMinLengthDips => 12; // ignore tiny accidental drags
 
     public Color ColorFor(ClickButton button) => ParseHex(button switch
     {

@@ -27,11 +27,15 @@ public sealed class AppController : IDisposable
     {
         _settings = _settingsStore.Load();
         _hook.EmitMoves = _settings.ShowLaserPointer; // only track moves when the laser needs them
-        // Start/stop move tracking whenever the laser toggles (from tray or window).
+        _hook.AnnotationsEnabled = AnnotationsActive;
+        // React to settings changes: move tracking follows the laser; the annotation
+        // gesture is only armed when the tool is on and annotations are enabled.
         _settings.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(Settings.ShowLaserPointer))
                 _hook.EmitMoves = _settings.ShowLaserPointer;
+            else if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.EnableAnnotations))
+                _hook.AnnotationsEnabled = AnnotationsActive;
         };
 
         // The tray menu mutates the shared settings directly and refreshes its
@@ -39,20 +43,35 @@ public sealed class AppController : IDisposable
         _tray = new TrayIcon(_settings, _launchAtLogin,
             persist: () => _settingsStore.Save(_settings),
             openSettings: ShowSettings,
+            clearAnnotations: ClearAnnotations,
             quit: () => Application.Current.Shutdown());
 
         // One overlay per monitor; rebuilds itself on display changes.
         _overlays = new OverlayManager(_settings);
 
-        // Global toggle hotkey (Ctrl+Alt+L). Fires on the UI thread.
+        // Global hotkeys (Ctrl+Shift+L toggle, Ctrl+Shift+C clear). Fire on the UI thread.
         _hotKeys.TogglePressed += ToggleEnabled;
+        _hotKeys.ClearPressed += ClearAnnotations;
         _hotKeys.Register();
 
         // Install the system-wide mouse hook on the UI thread so the callback fires
         // here and can touch the overlays without cross-thread marshaling.
         _hook.ClickDetected += OnClick;
+        _hook.AnnotationDetected += OnAnnotation;
         _hook.Install();
     }
+
+    // Ctrl+Shift annotation gestures are armed only while the tool is enabled.
+    private bool AnnotationsActive => _settings.Enabled && _settings.EnableAnnotations;
+
+    private void OnAnnotation(AnnotationEvent evt)
+    {
+        // Boxes are reserved for a later milestone; only arrows draw for now.
+        if (evt.Tool != AnnotationTool.Arrow) return;
+        _overlays?.DispatchAnnotation(evt);
+    }
+
+    public void ClearAnnotations() => _overlays?.ClearAnnotations();
 
     // When each button went down, to measure hold time for the release ring.
     private readonly Dictionary<ClickButton, long> _pressTicks = new();

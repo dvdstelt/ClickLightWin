@@ -24,9 +24,11 @@ If Windows SmartScreen shows "Windows protected your PC" on first launch, choose
 - Fading pulse on click, a contracting ring on hold-and-release, and a drag trail
 - **Laser-pointer mode**: a glowing cursor that trails the pointer, plus a fading
   freehand stroke while you drag
-- Per-button colors and Size/Duration presets
+- **Arrow annotations**: hold **Ctrl+Shift** and drag to draw a persistent arrow;
+  **Ctrl+Shift+C** clears them
+- Per-button and arrow colors, Size/Duration presets
 - A settings window and a dark tray menu with quick toggles
-- Global toggle hotkey **Ctrl+Alt+L**, launch-at-login, single-instance guard
+- Global toggle hotkey **Ctrl+Shift+L**, launch-at-login, single-instance guard
 
 ### Requirements
 
