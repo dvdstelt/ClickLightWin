@@ -13,13 +13,18 @@ public sealed class AppController : IDisposable
 {
     private readonly Settings _settings = Settings.Default;
     private readonly LowLevelMouseHook _hook = new();
+    private readonly PreferencesStore _preferencesStore = new();
+    private Preferences _preferences = new();
     private TrayIcon? _tray;
     private OverlayManager? _overlays;
     private bool _enabled = true;
 
     public void Start()
     {
-        _tray = new TrayIcon();
+        _preferences = _preferencesStore.Load();
+        _enabled = _preferences.Enabled;
+
+        _tray = new TrayIcon(_enabled);
         _tray.ToggleRequested += OnToggle;
         _tray.QuitRequested += () => Application.Current.Shutdown();
 
@@ -44,7 +49,8 @@ public sealed class AppController : IDisposable
     private void OnToggle()
     {
         _enabled = !_enabled;
-        Console.WriteLine($"[ClickLight] Enabled = {_enabled}");
+        _preferences.Enabled = _enabled;
+        _preferencesStore.Save(_preferences);
     }
 
     public void Dispose()

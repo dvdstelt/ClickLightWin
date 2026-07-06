@@ -15,10 +15,10 @@ public sealed class TrayIcon : IDisposable
     public event Action? ToggleRequested;
     public event Action? QuitRequested;
 
-    public TrayIcon()
+    public TrayIcon(bool initialEnabled)
     {
         var menu = new ContextMenuStrip();
-        var toggle = new ToolStripMenuItem("Enabled") { Checked = true, CheckOnClick = true };
+        var toggle = new ToolStripMenuItem("Enabled") { Checked = initialEnabled, CheckOnClick = true };
         toggle.Click += (_, _) => ToggleRequested?.Invoke();
         menu.Items.Add(toggle);
         menu.Items.Add(new ToolStripSeparator());
