@@ -85,5 +85,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: assets/*.exe
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md    # curated intro, prepended...
+          generate_release_notes: true   # ...then the auto per-version changelog
           fail_on_unmatched_files: true
