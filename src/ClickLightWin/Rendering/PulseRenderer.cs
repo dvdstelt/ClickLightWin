@@ -21,15 +21,53 @@ public sealed class PulseRenderer(Canvas canvas)
 
     public void Spawn(Point center, ClickEvent click, Settings settings)
     {
-        if (click.Phase == ClickPhase.Drag)
+        switch (click.Phase)
         {
-            SpawnDragDot(center, settings);
-            return;
+            case ClickPhase.Drag:
+                SpawnDragDot(center, settings);
+                return;
+            case ClickPhase.Up:
+                SpawnReleaseRing(center, click, settings);
+                return;
+            default:
+                // A fresh press ends any previous drag trail.
+                _lastDragPoint = null;
+                SpawnPressRing(center, click, settings);
+                return;
         }
+    }
 
-        // A fresh press ends any previous drag trail.
-        _lastDragPoint = null;
-        SpawnPressRing(center, click, settings);
+    private void SpawnReleaseRing(Point center, ClickEvent click, Settings settings)
+    {
+        var color = settings.ColorFor(click.Button);
+        var baseDiameter = settings.BaseDiameterDips;
+        var duration = settings.ReleaseDuration;
+
+        var ring = new Ellipse
+        {
+            Width = baseDiameter,
+            Height = baseDiameter,
+            Stroke = new SolidColorBrush(color),
+            StrokeThickness = settings.StrokeThickness * 0.7,
+            IsHitTestVisible = false,
+            RenderTransformOrigin = new Point(0.5, 0.5)
+        };
+        Canvas.SetLeft(ring, center.X - baseDiameter / 2);
+        Canvas.SetTop(ring, center.Y - baseDiameter / 2);
+
+        var scale = new ScaleTransform(settings.ReleaseStartScale, settings.ReleaseStartScale);
+        ring.RenderTransform = scale;
+        canvas.Children.Add(ring);
+
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        // Contract inward (wide -> narrow) while fading out.
+        var shrink = new DoubleAnimation(settings.ReleaseStartScale, settings.ReleaseEndScale, duration) { EasingFunction = ease };
+        var fade = new DoubleAnimation(0.9, 0, duration) { EasingFunction = ease };
+        fade.Completed += (_, _) => canvas.Children.Remove(ring);
+
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, shrink);
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, shrink);
+        ring.BeginAnimation(UIElement.OpacityProperty, fade);
     }
 
     private void SpawnDragDot(Point center, Settings settings)

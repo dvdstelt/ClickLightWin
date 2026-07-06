@@ -19,6 +19,7 @@ public sealed class Settings : INotifyPropertyChanged
 {
     private bool _enabled = true;
     private bool _showDrag = true;
+    private bool _showRelease = true;
     private double _baseDiameterDips = 32;  // Medium preset
     private double _pulseDurationMs = 480;  // Normal preset
     private string _leftColorHex = "#3B82F6";   // blue
@@ -29,6 +30,7 @@ public sealed class Settings : INotifyPropertyChanged
 
     public bool Enabled { get => _enabled; set => Set(ref _enabled, value); }
     public bool ShowDrag { get => _showDrag; set => Set(ref _showDrag, value); }
+    public bool ShowRelease { get => _showRelease; set => Set(ref _showRelease, value); }
     public double BaseDiameterDips { get => _baseDiameterDips; set => Set(ref _baseDiameterDips, value); }
     public double PulseDurationMs { get => _pulseDurationMs; set => Set(ref _pulseDurationMs, value); }
     public string LeftColorHex { get => _leftColorHex; set => Set(ref _leftColorHex, value); }
@@ -40,6 +42,15 @@ public sealed class Settings : INotifyPropertyChanged
     [JsonIgnore] public double MaxScale => 2.2;
     [JsonIgnore] public double StrokeThickness => 3;
     [JsonIgnore] public Duration PulseDuration => new(TimeSpan.FromMilliseconds(_pulseDurationMs));
+
+    // Release ring: a ring that starts wide and contracts inward as it fades,
+    // shown when a held button is let go. Mirrors the leftUp/rightUp/middleUp
+    // contraction in ClickOverlayView.swift.
+    [JsonIgnore] public Duration ReleaseDuration => new(TimeSpan.FromMilliseconds(_pulseDurationMs * 0.7));
+    [JsonIgnore] public double ReleaseStartScale => 1.7;
+    [JsonIgnore] public double ReleaseEndScale => 0.5;
+    // Minimum hold before a release ring is shown, so quick clicks stay clean.
+    [JsonIgnore] public long ReleaseMinHoldMs => 150;
 
     [JsonIgnore] public double DragDotDiameter => 10;
     [JsonIgnore] public Duration DragDuration => new(TimeSpan.FromMilliseconds(360));

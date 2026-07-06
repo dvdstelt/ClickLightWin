@@ -53,14 +53,32 @@ public sealed class AppController : IDisposable
         _hook.Install();
     }
 
+    // When each button went down, to measure hold time for the release ring.
+    private readonly Dictionary<ClickButton, long> _pressTicks = new();
+
     private void OnClick(ClickEvent click)
     {
         if (!_settings.Enabled) return;
-        // Press draws a ring; drag draws a fading trail (when enabled). Release has
-        // no visual yet (separate press/release visuals are a later M7 item).
-        if (click.Phase == ClickPhase.Up) return;
-        if (click.Phase == ClickPhase.Drag && !_settings.ShowDrag) return;
-        _overlays?.Dispatch(click);
+        switch (click.Phase)
+        {
+            case ClickPhase.Down:
+                _pressTicks[click.Button] = Environment.TickCount64;
+                _overlays?.Dispatch(click); // expanding press ring
+                break;
+
+            case ClickPhase.Drag:
+                if (_settings.ShowDrag) _overlays?.Dispatch(click);
+                break;
+
+            case ClickPhase.Up:
+                // Only show the contracting release ring if the button was held past
+                // the threshold, so quick clicks stay clean.
+                var held = _pressTicks.TryGetValue(click.Button, out var down)
+                           && Environment.TickCount64 - down >= _settings.ReleaseMinHoldMs;
+                _pressTicks.Remove(click.Button);
+                if (_settings.ShowRelease && held) _overlays?.Dispatch(click);
+                break;
+        }
     }
 
     // Single toggle path for both the tray menu and the global hotkey. The tray
