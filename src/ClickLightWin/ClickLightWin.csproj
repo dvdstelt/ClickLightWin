@@ -10,6 +10,8 @@
     <LangVersion>latest</LangVersion>
     <RootNamespace>ClickLightWin</RootNamespace>
     <AssemblyName>ClickLightWin</AssemblyName>
+    <!-- The LibraryImport source generator emits unsafe marshalling code. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x64;arm64</Platforms>
     <!--
