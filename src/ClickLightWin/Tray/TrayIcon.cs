@@ -12,18 +12,26 @@ public sealed class TrayIcon : IDisposable
     private readonly NotifyIcon _icon;
     private readonly System.Drawing.Icon _iconImage;
     private readonly ToolStripMenuItem _toggleItem;
+    private readonly ToolStripMenuItem _launchItem;
 
     public event Action? ToggleRequested;
+    public event Action? LaunchAtLoginRequested;
     public event Action? QuitRequested;
 
-    public TrayIcon(bool initialEnabled)
+    public TrayIcon(bool initialEnabled, bool initialLaunchAtLogin)
     {
         var menu = new ContextMenuStrip();
-        // No CheckOnClick: AppController owns the enabled state and drives the
-        // checkmark via SetEnabled, so the hotkey and the menu stay in sync.
+        // No CheckOnClick: AppController owns these states and drives the
+        // checkmarks via SetEnabled/SetLaunchAtLogin, so the hotkey and the menu
+        // stay in sync.
         _toggleItem = new ToolStripMenuItem("Enabled") { Checked = initialEnabled };
         _toggleItem.Click += (_, _) => ToggleRequested?.Invoke();
         menu.Items.Add(_toggleItem);
+
+        _launchItem = new ToolStripMenuItem("Launch at login") { Checked = initialLaunchAtLogin };
+        _launchItem.Click += (_, _) => LaunchAtLoginRequested?.Invoke();
+        menu.Items.Add(_launchItem);
+
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Quit", null, (_, _) => QuitRequested?.Invoke());
 
@@ -39,6 +47,9 @@ public sealed class TrayIcon : IDisposable
 
     /// <summary>Reflect the current enabled state in the menu checkmark.</summary>
     public void SetEnabled(bool enabled) => _toggleItem.Checked = enabled;
+
+    /// <summary>Reflect the current launch-at-login state in the menu checkmark.</summary>
+    public void SetLaunchAtLogin(bool enabled) => _launchItem.Checked = enabled;
 
     public void Dispose()
     {

@@ -15,6 +15,7 @@ public sealed class AppController : IDisposable
     private readonly LowLevelMouseHook _hook = new();
     private readonly HotKeyManager _hotKeys = new();
     private readonly PreferencesStore _preferencesStore = new();
+    private readonly LaunchAtLoginController _launchAtLogin = new();
     private Preferences _preferences = new();
     private TrayIcon? _tray;
     private OverlayManager? _overlays;
@@ -25,8 +26,9 @@ public sealed class AppController : IDisposable
         _preferences = _preferencesStore.Load();
         _enabled = _preferences.Enabled;
 
-        _tray = new TrayIcon(_enabled);
+        _tray = new TrayIcon(_enabled, _launchAtLogin.IsEnabled);
         _tray.ToggleRequested += ToggleEnabled;
+        _tray.LaunchAtLoginRequested += ToggleLaunchAtLogin;
         _tray.QuitRequested += () => Application.Current.Shutdown();
 
         // One overlay per monitor; rebuilds itself on display changes.
@@ -59,6 +61,13 @@ public sealed class AppController : IDisposable
         _preferences.Enabled = _enabled;
         _preferencesStore.Save(_preferences);
         _tray?.SetEnabled(_enabled);
+    }
+
+    private void ToggleLaunchAtLogin()
+    {
+        var enabled = !_launchAtLogin.IsEnabled;
+        _launchAtLogin.SetEnabled(enabled);
+        _tray?.SetLaunchAtLogin(_launchAtLogin.IsEnabled);
     }
 
     public void Dispose()
