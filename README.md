@@ -10,7 +10,7 @@ app runs headless apart from a tray icon; there is no main window.
 
 ## Status
 
-**1.0.0.** Feature-complete for daily use:
+**1.1.0.** Feature-complete for daily use:
 
 - System-wide click capture via a low-level mouse hook
 - Transparent, click-through, topmost overlay per monitor, DPI-correct (Per-Monitor v2)
