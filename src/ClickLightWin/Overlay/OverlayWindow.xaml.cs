@@ -3,6 +3,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using ClickLightWin.Interop;
 using ClickLightWin.Rendering;
+using Point = System.Windows.Point;
 using Screen = System.Windows.Forms.Screen;
 
 namespace ClickLightWin.Overlay;
@@ -16,6 +17,7 @@ public partial class OverlayWindow : Window
 {
     private readonly Screen _screen;
     private readonly PulseRenderer _renderer;
+    private LaserRenderer? _laser;
 
     public OverlayWindow(Screen screen)
     {
@@ -27,9 +29,27 @@ public partial class OverlayWindow : Window
     /// <summary>Spawn a pulse. The click point is in physical virtual-screen pixels.</summary>
     public void ShowPulse(ClickEvent click, Settings settings)
     {
+        _renderer.Spawn(ToLocal(click), click, settings);
+    }
+
+    /// <summary>Drive the laser cursor/stroke for one event (physical pixels).</summary>
+    public void Laser(ClickEvent click, Settings settings)
+    {
+        _laser ??= new LaserRenderer(PulseCanvas, settings);
+        var local = ToLocal(click);
+        switch (click.Phase)
+        {
+            case ClickPhase.Down: _laser.BeginStroke(); break;
+            case ClickPhase.Move: _laser.UpdateCursor(local, settings); break;
+            case ClickPhase.Drag: _laser.UpdateCursor(local, settings); _laser.AppendPoint(local, settings); break;
+            case ClickPhase.Up: _laser.CompleteStroke(settings); break;
+        }
+    }
+
+    private Point ToLocal(ClickEvent click)
+    {
         var dpi = VisualTreeHelper.GetDpi(this);
-        var local = CoordinateMapper.PhysicalToLocalDips(click.ScreenX, click.ScreenY, _screen, dpi);
-        _renderer.Spawn(local, click, settings);
+        return CoordinateMapper.PhysicalToLocalDips(click.ScreenX, click.ScreenY, _screen, dpi);
     }
 
     /// <summary>Physical-pixel bounds of this overlay's monitor, for hit-testing.</summary>

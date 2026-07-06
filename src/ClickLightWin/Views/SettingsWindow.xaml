@@ -182,6 +182,9 @@
               Foreground="{StaticResource Text}" Margin="2,0,0,10" />
 
     <CheckBox Content="Show release ring (on hold + release)" IsChecked="{Binding ShowRelease}"
+              Foreground="{StaticResource Text}" Margin="2,0,0,10" />
+
+    <CheckBox Content="Laser pointer (glowing cursor + drag stroke)" IsChecked="{Binding ShowLaserPointer}"
               Foreground="{StaticResource Text}" Margin="2,0,0,20" />
 
     <Border Background="{StaticResource Segment}" CornerRadius="8" Padding="14,12" Margin="0,0,0,20">

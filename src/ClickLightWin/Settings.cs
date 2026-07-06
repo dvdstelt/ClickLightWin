@@ -20,6 +20,7 @@ public sealed class Settings : INotifyPropertyChanged
     private bool _enabled = true;
     private bool _showDrag = true;
     private bool _showRelease = true;
+    private bool _showLaserPointer = false;
     private double _baseDiameterDips = 32;  // Medium preset
     private double _pulseDurationMs = 480;  // Normal preset
     private string _leftColorHex = "#3B82F6";   // blue
@@ -31,6 +32,7 @@ public sealed class Settings : INotifyPropertyChanged
     public bool Enabled { get => _enabled; set => Set(ref _enabled, value); }
     public bool ShowDrag { get => _showDrag; set => Set(ref _showDrag, value); }
     public bool ShowRelease { get => _showRelease; set => Set(ref _showRelease, value); }
+    public bool ShowLaserPointer { get => _showLaserPointer; set => Set(ref _showLaserPointer, value); }
     public double BaseDiameterDips { get => _baseDiameterDips; set => Set(ref _baseDiameterDips, value); }
     public double PulseDurationMs { get => _pulseDurationMs; set => Set(ref _pulseDurationMs, value); }
     public string LeftColorHex { get => _leftColorHex; set => Set(ref _leftColorHex, value); }
@@ -56,6 +58,22 @@ public sealed class Settings : INotifyPropertyChanged
     [JsonIgnore] public Duration DragDuration => new(TimeSpan.FromMilliseconds(360));
     [JsonIgnore] public double DragMinSpacingDips => 6;
     [JsonIgnore] public Color DragColor => Color.FromRgb(0xEB, 0xD6, 0x38); // yellow
+
+    // Laser pointer: a glowing cursor built from concentric solid discs (soft
+    // outer glow, solid red, salmon, small white core) that follows movement,
+    // plus a fading freehand stroke while dragging. Colors and proportions match
+    // the macOS laser in ClickOverlayView.swift / SettingsStore.swift.
+    [JsonIgnore] public Color LaserColor => Color.FromRgb(0xFF, 0x29, 0x05);    // red   (macOS laserColor)
+    [JsonIgnore] public Color LaserMidColor => Color.FromRgb(0xFF, 0x94, 0x82); // salmon (macOS middle)
+    [JsonIgnore] public Color LaserCoreColor => Colors.White;                   // white  (macOS inner)
+    [JsonIgnore] public double LaserGlowDiameter => 26; // soft outer aura
+    [JsonIgnore] public double LaserRedDiameter => 14;  // solid red disc
+    [JsonIgnore] public double LaserMidDiameter => 8;   // salmon disc
+    [JsonIgnore] public double LaserCoreDiameter => 4;  // small white center
+    [JsonIgnore] public double LaserStrokeThickness => 5;
+    [JsonIgnore] public double LaserMinSpacingDips => 3;
+    [JsonIgnore] public int LaserIdleFadeMs => 130;      // hide the halo after movement stops
+    [JsonIgnore] public Duration LaserStrokeFade => new(TimeSpan.FromMilliseconds(900));
 
     public Color ColorFor(ClickButton button) => ParseHex(button switch
     {

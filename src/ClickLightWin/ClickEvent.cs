@@ -8,12 +8,13 @@ public enum ClickButton
     Middle
 }
 
-/// <summary>The phase of a mouse interaction: press, release, or drag-with-button-held.</summary>
+/// <summary>The phase of a mouse interaction: press, release, drag-with-button-held, or move.</summary>
 public enum ClickPhase
 {
     Down,
     Up,
-    Drag
+    Drag,
+    Move
 }
 
 /// <summary>

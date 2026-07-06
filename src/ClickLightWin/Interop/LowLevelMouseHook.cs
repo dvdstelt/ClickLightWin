@@ -18,6 +18,13 @@ public sealed class LowLevelMouseHook : IDisposable
 
     public event Action<ClickEvent>? ClickDetected;
 
+    /// <summary>
+    /// When true, plain mouse moves (no button held) are also raised as
+    /// <see cref="ClickPhase.Move"/>. Off by default so the high-frequency move
+    /// stream is only processed when a feature (the laser pointer) needs it.
+    /// </summary>
+    public bool EmitMoves { get; set; }
+
     public LowLevelMouseHook() => _proc = HookCallback;
 
     public void Install()
@@ -63,6 +70,7 @@ public sealed class LowLevelMouseHook : IDisposable
             case NativeMethods.WM_MOUSEMOVE when _leftDown:   click = new(ClickButton.Left, ClickPhase.Drag, x, y);   return true;
             case NativeMethods.WM_MOUSEMOVE when _rightDown:  click = new(ClickButton.Right, ClickPhase.Drag, x, y);  return true;
             case NativeMethods.WM_MOUSEMOVE when _middleDown: click = new(ClickButton.Middle, ClickPhase.Drag, x, y); return true;
+            case NativeMethods.WM_MOUSEMOVE when EmitMoves:   click = new(ClickButton.Left, ClickPhase.Move, x, y);   return true;
         }
         click = default;
         return false;

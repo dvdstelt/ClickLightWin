@@ -26,12 +26,15 @@ public sealed class AppController : IDisposable
     public void Start()
     {
         _settings = _settingsStore.Load();
-        // Keep the tray checkmark in sync however Enabled changes (menu, hotkey, or
-        // the settings window binding).
+        _hook.EmitMoves = _settings.ShowLaserPointer; // only track moves when the laser needs them
+        // React to settings changes: keep the tray checkmark in sync however Enabled
+        // changes (menu, hotkey, or window), and start/stop move tracking with the laser.
         _settings.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(Settings.Enabled))
                 _tray?.SetEnabled(_settings.Enabled);
+            else if (e.PropertyName == nameof(Settings.ShowLaserPointer))
+                _hook.EmitMoves = _settings.ShowLaserPointer;
         };
 
         _tray = new TrayIcon(_settings.Enabled, _launchAtLogin.IsEnabled);
@@ -64,10 +67,17 @@ public sealed class AppController : IDisposable
             case ClickPhase.Down:
                 _pressTicks[click.Button] = Environment.TickCount64;
                 _overlays?.Dispatch(click); // expanding press ring
+                if (_settings.ShowLaserPointer) _overlays?.DispatchLaser(click); // start a stroke
+                break;
+
+            case ClickPhase.Move:
+                if (_settings.ShowLaserPointer) _overlays?.DispatchLaser(click); // cursor halo
                 break;
 
             case ClickPhase.Drag:
-                if (_settings.ShowDrag) _overlays?.Dispatch(click);
+                // In laser mode the drag becomes a freehand stroke instead of the dot trail.
+                if (_settings.ShowLaserPointer) _overlays?.DispatchLaser(click);
+                else if (_settings.ShowDrag) _overlays?.Dispatch(click);
                 break;
 
             case ClickPhase.Up:
@@ -76,6 +86,7 @@ public sealed class AppController : IDisposable
                 var held = _pressTicks.TryGetValue(click.Button, out var down)
                            && Environment.TickCount64 - down >= _settings.ReleaseMinHoldMs;
                 _pressTicks.Remove(click.Button);
+                if (_settings.ShowLaserPointer) _overlays?.DispatchLaser(click); // finish the stroke
                 if (_settings.ShowRelease && held) _overlays?.Dispatch(click);
                 break;
         }

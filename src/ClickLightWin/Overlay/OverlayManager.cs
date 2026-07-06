@@ -22,14 +22,17 @@ public sealed class OverlayManager : IDisposable
     }
 
     /// <summary>Route a click (physical pixels) to the overlay that contains it.</summary>
-    public void Dispatch(ClickEvent click)
+    public void Dispatch(ClickEvent click) => Find(click)?.ShowPulse(click, _settings);
+
+    /// <summary>Route a laser event (physical pixels) to the overlay that contains it.</summary>
+    public void DispatchLaser(ClickEvent click) => Find(click)?.Laser(click, _settings);
+
+    private OverlayWindow? Find(ClickEvent click)
     {
         foreach (var overlay in _overlays)
             if (overlay.ScreenBounds.Contains(click.ScreenX, click.ScreenY))
-            {
-                overlay.ShowPulse(click, _settings);
-                return;
-            }
+                return overlay;
+        return null;
     }
 
     private void OnDisplaysChanged(object? sender, EventArgs e)
