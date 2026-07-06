@@ -64,12 +64,8 @@ public sealed class AppController : IDisposable
     // Ctrl+Shift annotation gestures are armed only while the tool is enabled.
     private bool AnnotationsActive => _settings.Enabled && _settings.EnableAnnotations;
 
-    private void OnAnnotation(AnnotationEvent evt)
-    {
-        // Boxes are reserved for a later milestone; only arrows draw for now.
-        if (evt.Tool != AnnotationTool.Arrow) return;
-        _overlays?.DispatchAnnotation(evt);
-    }
+    // Left-drag draws an arrow, right-drag a box; the hook tags each with its tool.
+    private void OnAnnotation(AnnotationEvent evt) => _overlays?.DispatchAnnotation(evt);
 
     public void ClearAnnotations() => _overlays?.ClearAnnotations();
 

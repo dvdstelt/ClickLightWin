@@ -54,7 +54,7 @@ public partial class OverlayWindow : Window
         var local = ToLocal(evt.ScreenX, evt.ScreenY);
         switch (evt.Phase)
         {
-            case AnnotationPhase.Begin: _annotations.Begin(local); break;
+            case AnnotationPhase.Begin: _annotations.Begin(evt.Tool, local); break;
             case AnnotationPhase.Update: _annotations.Update(local, settings); break;
             case AnnotationPhase.Commit: _annotations.Commit(local, settings); break;
         }

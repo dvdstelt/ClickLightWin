@@ -16,8 +16,8 @@ app runs headless apart from a tray icon; there is no main window.
 - Transparent, click-through, topmost overlay per monitor, DPI-correct (Per-Monitor v2)
 - Fading pulse on press, a contracting ring on hold + release, and a fading drag trail
 - **Laser-pointer mode**: a glowing cursor that trails the pointer plus a fading freehand stroke on drag
-- **Arrow annotations**: hold Ctrl+Shift and drag to draw a persistent arrow; Ctrl+Shift+C clears them
-- Per-button and arrow colors, Size/Duration presets
+- **Annotations**: hold Ctrl+Shift and drag — left-drag draws an arrow, right-drag a box; they persist until Ctrl+Shift+C clears them
+- Per-button and annotation colors, Size/Duration presets
 - A modern settings window and a dark tray menu (feature toggles, preset submenus)
 - Global toggle hotkey **Ctrl+Shift+L**, launch-at-login, single-instance guard
 - Settings persisted to `%APPDATA%\ClickLightWin\settings.json`

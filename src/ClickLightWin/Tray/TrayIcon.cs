@@ -127,7 +127,8 @@ public sealed class TrayIcon : IDisposable
 
     private static void ShowAbout() => MessageBox.Show(
         "ClickLight for Windows\n\nHighlights your mouse clicks on screen during demos and "
-        + "screen sharing.\n\nCtrl+Shift+L  toggle\nCtrl+Shift + drag  draw an arrow\nCtrl+Shift+C  clear annotations",
+        + "screen sharing.\n\nCtrl+Shift+L  toggle\nCtrl+Shift + left-drag  draw an arrow"
+        + "\nCtrl+Shift + right-drag  draw a box\nCtrl+Shift+C  clear annotations",
         "About ClickLight", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
     public void Dispose()

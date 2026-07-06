@@ -27,7 +27,7 @@ public sealed class Settings : INotifyPropertyChanged
     private string _leftColorHex = "#3B82F6";   // blue
     private string _rightColorHex = "#F97316";  // orange
     private string _middleColorHex = "#22C55E"; // green
-    private string _arrowColorHex = "#EF4444";  // red
+    private string _annotationColorHex = "#EF4444"; // red (shared by arrows and boxes)
 
     // ---- Persisted, user-editable -------------------------------------------
 
@@ -41,7 +41,7 @@ public sealed class Settings : INotifyPropertyChanged
     public string LeftColorHex { get => _leftColorHex; set => Set(ref _leftColorHex, value); }
     public string RightColorHex { get => _rightColorHex; set => Set(ref _rightColorHex, value); }
     public string MiddleColorHex { get => _middleColorHex; set => Set(ref _middleColorHex, value); }
-    public string ArrowColorHex { get => _arrowColorHex; set => Set(ref _arrowColorHex, value); }
+    public string AnnotationColorHex { get => _annotationColorHex; set => Set(ref _annotationColorHex, value); }
 
     // ---- Computed render constants (not persisted, not user-editable yet) ----
 
@@ -79,12 +79,15 @@ public sealed class Settings : INotifyPropertyChanged
     [JsonIgnore] public int LaserIdleFadeMs => 130;      // hide the halo after movement stops
     [JsonIgnore] public Duration LaserStrokeFade => new(TimeSpan.FromMilliseconds(900));
 
-    // Arrow annotations: a persistent colored arrow with a dark outline for contrast.
-    [JsonIgnore] public Color ArrowColor => ParseHex(_arrowColorHex);
+    // Annotations (arrows and boxes): a persistent colored shape with a dark
+    // outline for contrast on any background. Color is shared by both shapes.
+    [JsonIgnore] public Color AnnotationColor => ParseHex(_annotationColorHex);
+    [JsonIgnore] public double AnnotationMinLengthDips => 12; // ignore tiny accidental drags
     [JsonIgnore] public double ArrowThickness => 4;
     [JsonIgnore] public double ArrowHeadLength => 18;
     [JsonIgnore] public double ArrowHeadWidth => 15;
-    [JsonIgnore] public double ArrowMinLengthDips => 12; // ignore tiny accidental drags
+    [JsonIgnore] public double BoxThickness => 3;
+    [JsonIgnore] public double BoxCornerRadius => 3;
 
     public Color ColorFor(ClickButton button) => ParseHex(button switch
     {
