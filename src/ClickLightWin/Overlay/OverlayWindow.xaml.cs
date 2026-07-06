@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
 using ClickLightWin.Interop;
+using ClickLightWin.Rendering;
 using Screen = System.Windows.Forms.Screen;
 
 namespace ClickLightWin.Overlay;
@@ -13,11 +15,21 @@ namespace ClickLightWin.Overlay;
 public partial class OverlayWindow : Window
 {
     private readonly Screen _screen;
+    private readonly PulseRenderer _renderer;
 
     public OverlayWindow(Screen screen)
     {
         InitializeComponent();
         _screen = screen;
+        _renderer = new PulseRenderer(PulseCanvas);
+    }
+
+    /// <summary>Spawn a pulse. The click point is in physical virtual-screen pixels.</summary>
+    public void ShowPulse(ClickEvent click, Settings settings)
+    {
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var local = CoordinateMapper.PhysicalToLocalDips(click.ScreenX, click.ScreenY, _screen, dpi);
+        _renderer.Spawn(local, click, settings);
     }
 
     /// <summary>Physical-pixel bounds of this overlay's monitor, for hit-testing.</summary>

@@ -8,8 +8,8 @@ namespace ClickLightWin;
 /// <summary>
 /// Owns app lifetime and wires the pieces together. Milestone 1 wires the tray;
 /// Milestone 2 adds a single primary-monitor overlay (replaced by OverlayManager
-/// in Milestone 5); Milestone 3 installs the mouse hook and logs clicks. Pulses
-/// land in Milestone 4.
+/// in Milestone 5); Milestone 3 installs the mouse hook; Milestone 4 routes each
+/// press to a fading pulse on the overlay.
 /// </summary>
 public sealed class AppController : IDisposable
 {
@@ -39,7 +39,10 @@ public sealed class AppController : IDisposable
     private void OnClick(ClickEvent click)
     {
         if (!_enabled) return;
-        Console.WriteLine($"[ClickLight] {click.Button} {click.Phase} @ ({click.ScreenX}, {click.ScreenY})");
+        // v0.1: one pulse per press. Drop Up/Drag; separate release visuals are M7,
+        // laser-pointer drag is M7 too. Both use the phases the hook already emits.
+        if (click.Phase != ClickPhase.Down) return;
+        _overlay?.ShowPulse(click, _settings);
     }
 
     private void OnToggle()
