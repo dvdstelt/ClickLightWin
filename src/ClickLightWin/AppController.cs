@@ -15,6 +15,7 @@ namespace ClickLightWin;
 public sealed class AppController : IDisposable
 {
     private readonly LowLevelMouseHook _hook = new();
+    private readonly LowLevelKeyboardHook _keyboardHook = new();
     private readonly HotKeyManager _hotKeys = new();
     private readonly SettingsStore _settingsStore = new();
     private readonly LaunchAtLoginController _launchAtLogin = new();
@@ -36,7 +37,11 @@ public sealed class AppController : IDisposable
                 _hook.EmitMoves = _settings.ShowLaserPointer;
             else if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.EnableAnnotations))
                 _hook.AnnotationsEnabled = AnnotationsActive;
+
+            if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.ShowShortcuts))
+                UpdateKeyboardHook();
         };
+        _keyboardHook.ShortcutDetected += keys => _overlays?.DispatchShortcut(keys);
 
         // The tray menu mutates the shared settings directly and refreshes its
         // checkmarks on open, so no per-item sync is needed here.
@@ -59,6 +64,17 @@ public sealed class AppController : IDisposable
         _hook.ClickDetected += OnClick;
         _hook.AnnotationDetected += OnAnnotation;
         _hook.Install();
+
+        UpdateKeyboardHook(); // installs the keyboard hook only if the shortcut display is on
+    }
+
+    // Privacy: the keyboard hook only runs while the shortcut display is enabled
+    // (and the tool is on). It is uninstalled entirely otherwise.
+    private void UpdateKeyboardHook()
+    {
+        var active = _settings.Enabled && _settings.ShowShortcuts;
+        if (active && !_keyboardHook.IsInstalled) _keyboardHook.Install();
+        else if (!active && _keyboardHook.IsInstalled) _keyboardHook.Uninstall();
     }
 
     // Ctrl+Shift annotation gestures are armed only while the tool is enabled.
@@ -135,6 +151,7 @@ public sealed class AppController : IDisposable
     {
         _settingsStore.Save(_settings);
         _hook.Dispose();
+        _keyboardHook.Dispose();
         _hotKeys.Dispose();
         _overlays?.Dispose();
         _tray?.Dispose();

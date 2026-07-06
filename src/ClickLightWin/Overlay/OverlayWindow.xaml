@@ -10,5 +10,11 @@
         ResizeMode="NoResize"
         IsHitTestVisible="False"
         WindowStartupLocation="Manual">
-  <Canvas x:Name="PulseCanvas" IsHitTestVisible="False" Background="Transparent" />
+  <Grid>
+    <Canvas x:Name="PulseCanvas" IsHitTestVisible="False" Background="Transparent" />
+    <!-- Live shortcut display: pills stack upward from the bottom-center. -->
+    <StackPanel x:Name="ShortcutStack" IsHitTestVisible="False"
+                HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                Margin="0,0,0,64" />
+  </Grid>
 </Window>

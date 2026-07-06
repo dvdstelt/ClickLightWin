@@ -17,6 +17,7 @@ app runs headless apart from a tray icon; there is no main window.
 - Fading pulse on press, a contracting ring on hold + release, and a fading drag trail
 - **Laser-pointer mode**: a glowing cursor that trails the pointer plus a fading freehand stroke on drag
 - **Annotations**: hold Ctrl+Shift and drag — left-drag draws an arrow, right-drag a box; they persist until Ctrl+Shift+C clears them
+- **Live shortcut display**: shows keyboard shortcuts (Ctrl+C, Alt+Tab, …) as key-cap pills for screencasts — modifier combos only, off by default
 - Per-button and annotation colors, Size/Duration presets
 - A modern settings window and a dark tray menu (feature toggles, preset submenus)
 - Global toggle hotkey **Ctrl+Shift+L**, launch-at-login, single-instance guard
@@ -84,6 +85,11 @@ icon for the menu, or press **Ctrl+Shift+L** to toggle highlighting on and off.
   highlight over admin apps, but that is rarely worth it for a demo tool.
 - **Fullscreen exclusive apps.** A fullscreen exclusive game or another topmost
   window can cover the overlay.
+- **Keyboard shortcut display privacy.** When enabled, it installs a keyboard hook
+  that reacts *only* to modifier combinations (Ctrl / Alt / Win + key) and never to
+  plain typing, so passwords and text are never captured. Nothing is stored or sent;
+  each combo becomes a transient on-screen label. It is off by default and the hook
+  is only installed while the feature is on.
 - **Mixed-DPI multi-monitor.** Placement is verified at 100% and 150% on a single
   monitor. Cross-monitor routing and mixed-DPI setups (e.g. a 150% laptop panel
   plus a 100% external) should be verified on that hardware.

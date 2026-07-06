@@ -19,6 +19,7 @@ public partial class OverlayWindow : Window
     private readonly PulseRenderer _renderer;
     private LaserRenderer? _laser;
     private AnnotationRenderer? _annotations;
+    private ShortcutStackRenderer? _shortcuts;
 
     public OverlayWindow(Screen screen)
     {
@@ -62,6 +63,13 @@ public partial class OverlayWindow : Window
 
     /// <summary>Remove all committed annotations on this overlay.</summary>
     public void ClearAnnotations() => _annotations?.Clear();
+
+    /// <summary>Show a shortcut in this monitor's bottom-center stack.</summary>
+    public void ShowShortcut(IReadOnlyList<string> keys, Settings settings)
+    {
+        _shortcuts ??= new ShortcutStackRenderer(ShortcutStack);
+        _shortcuts.Show(keys, settings);
+    }
 
     private Point ToLocal(ClickEvent click) => ToLocal(click.ScreenX, click.ScreenY);
 

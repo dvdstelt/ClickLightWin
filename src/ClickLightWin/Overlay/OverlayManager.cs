@@ -45,6 +45,19 @@ public sealed class OverlayManager : IDisposable
         foreach (var overlay in _overlays) overlay.ClearAnnotations();
     }
 
+    /// <summary>Show a keyboard shortcut on the monitor that currently holds the cursor.</summary>
+    public void DispatchShortcut(IReadOnlyList<string> keys)
+    {
+        var overlay = CursorOverlay() ?? (_overlays.Count > 0 ? _overlays[0] : null);
+        overlay?.ShowShortcut(keys, _settings);
+    }
+
+    private OverlayWindow? CursorOverlay()
+    {
+        if (!Interop.NativeMethods.GetCursorPos(out var pt)) return null;
+        return FindByPoint(pt.X, pt.Y);
+    }
+
     private OverlayWindow? Find(ClickEvent click) => FindByPoint(click.ScreenX, click.ScreenY);
 
     private OverlayWindow? FindByPoint(int x, int y)

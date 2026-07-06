@@ -26,6 +26,8 @@ If Windows SmartScreen shows "Windows protected your PC" on first launch, choose
   freehand stroke while you drag
 - **Annotations**: hold **Ctrl+Shift** and drag — left-drag draws an arrow,
   right-drag a box; they persist until **Ctrl+Shift+C** clears them
+- **Live shortcut display**: shows keyboard shortcuts (Ctrl+C, Alt+Tab, …) as
+  key-cap pills for screencasts — modifier combos only, off by default
 - Per-button and annotation colors, Size/Duration presets
 - A settings window and a dark tray menu with quick toggles
 - Global toggle hotkey **Ctrl+Shift+L**, launch-at-login, single-instance guard

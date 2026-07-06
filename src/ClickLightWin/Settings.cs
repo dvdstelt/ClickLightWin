@@ -22,6 +22,7 @@ public sealed class Settings : INotifyPropertyChanged
     private bool _showRelease = true;
     private bool _showLaserPointer = false;
     private bool _enableAnnotations = true;
+    private bool _showShortcuts = false;
     private double _baseDiameterDips = 32;  // Medium preset
     private double _pulseDurationMs = 480;  // Normal preset
     private string _leftColorHex = "#3B82F6";   // blue
@@ -36,6 +37,7 @@ public sealed class Settings : INotifyPropertyChanged
     public bool ShowRelease { get => _showRelease; set => Set(ref _showRelease, value); }
     public bool ShowLaserPointer { get => _showLaserPointer; set => Set(ref _showLaserPointer, value); }
     public bool EnableAnnotations { get => _enableAnnotations; set => Set(ref _enableAnnotations, value); }
+    public bool ShowShortcuts { get => _showShortcuts; set => Set(ref _showShortcuts, value); }
     public double BaseDiameterDips { get => _baseDiameterDips; set => Set(ref _baseDiameterDips, value); }
     public double PulseDurationMs { get => _pulseDurationMs; set => Set(ref _pulseDurationMs, value); }
     public string LeftColorHex { get => _leftColorHex; set => Set(ref _leftColorHex, value); }
@@ -88,6 +90,11 @@ public sealed class Settings : INotifyPropertyChanged
     [JsonIgnore] public double ArrowHeadWidth => 15;
     [JsonIgnore] public double BoxThickness => 3;
     [JsonIgnore] public double BoxCornerRadius => 3;
+
+    // Live shortcut display: a bottom-center stack of key-cap pills that hold, then fade.
+    [JsonIgnore] public Duration ShortcutHold => new(TimeSpan.FromMilliseconds(1100));
+    [JsonIgnore] public Duration ShortcutFade => new(TimeSpan.FromMilliseconds(350));
+    [JsonIgnore] public int ShortcutStackMax => 6;
 
     public Color ColorFor(ClickButton button) => ParseHex(button switch
     {
