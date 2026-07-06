@@ -16,7 +16,54 @@ namespace ClickLightWin.Rendering;
 /// </summary>
 public sealed class PulseRenderer(Canvas canvas)
 {
+    // Last drag-dot position on this overlay, to throttle the trail by distance.
+    private Point? _lastDragPoint;
+
     public void Spawn(Point center, ClickEvent click, Settings settings)
+    {
+        if (click.Phase == ClickPhase.Drag)
+        {
+            SpawnDragDot(center, settings);
+            return;
+        }
+
+        // A fresh press ends any previous drag trail.
+        _lastDragPoint = null;
+        SpawnPressRing(center, click, settings);
+    }
+
+    private void SpawnDragDot(Point center, Settings settings)
+    {
+        // Throttle: skip dots too close to the previous one so slow drags do not
+        // pile up hundreds of overlapping ellipses.
+        if (_lastDragPoint is { } last)
+        {
+            var dx = center.X - last.X;
+            var dy = center.Y - last.Y;
+            var minSq = settings.DragMinSpacingDips * settings.DragMinSpacingDips;
+            if (dx * dx + dy * dy < minSq) return;
+        }
+        _lastDragPoint = center;
+
+        var d = settings.DragDotDiameter;
+        var dot = new Ellipse
+        {
+            Width = d,
+            Height = d,
+            Fill = new SolidColorBrush(settings.DragColor),
+            IsHitTestVisible = false
+        };
+        Canvas.SetLeft(dot, center.X - d / 2);
+        Canvas.SetTop(dot, center.Y - d / 2);
+        canvas.Children.Add(dot);
+
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var fade = new DoubleAnimation(0.85, 0, settings.DragDuration) { EasingFunction = ease };
+        fade.Completed += (_, _) => canvas.Children.Remove(dot);
+        dot.BeginAnimation(UIElement.OpacityProperty, fade);
+    }
+
+    private void SpawnPressRing(Point center, ClickEvent click, Settings settings)
     {
         var color = settings.ColorFor(click.Button);
         var baseDiameter = settings.BaseDiameterDips;   // e.g. 28

@@ -47,9 +47,9 @@ public sealed class AppController : IDisposable
     private void OnClick(ClickEvent click)
     {
         if (!_enabled) return;
-        // v0.1: one pulse per press. Drop Up/Drag; separate release visuals are M7,
-        // laser-pointer drag is M7 too. Both use the phases the hook already emits.
-        if (click.Phase != ClickPhase.Down) return;
+        // Press draws a ring; drag draws a fading trail. Release has no visual yet
+        // (separate press/release visuals are a later M7 item).
+        if (click.Phase == ClickPhase.Up) return;
         _overlays?.Dispatch(click);
     }
 
