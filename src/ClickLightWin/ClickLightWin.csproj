@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>ClickLightWin</RootNamespace>
+    <AssemblyName>ClickLightWin</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64;arm64</Platforms>
+    <!--
+      WFO0003: WinForms wants high-DPI configured via its API. This is a WPF app that
+      uses WinForms only for NotifyIcon/Screen (never its app host), and PerMonitorV2 is
+      declared in app.manifest by design. The WinForms path does not apply here.
+    -->
+    <NoWarn>WFO0003</NoWarn>
+  </PropertyGroup>
+
+</Project>
