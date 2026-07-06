@@ -1,4 +1,5 @@
 using System.Threading;
+using Velopack;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -14,6 +15,10 @@ public partial class App : Application
 
     protected override void OnStartup(System.Windows.StartupEventArgs e)
     {
+        // Must run before any app logic: handles Velopack install/update hooks
+        // (which run the exe with special args and exit) for the installer build.
+        VelopackApp.Build().Run();
+
         _singleInstanceMutex = new Mutex(initiallyOwned: true, SingleInstanceMutexName, out var createdNew);
         if (!createdNew)
         {

@@ -27,7 +27,20 @@ See [docs/04-build-checklist.md](docs/04-build-checklist.md) for the roadmap thi
 > only been verified on a single monitor (100% and 150%). Worth a pass on multi-monitor
 > and mixed-DPI hardware.
 
-## Requirements
+## Download
+
+Grab the latest from the [Releases](../../releases) page. Two options:
+
+- **`ClickLight-vX.Y.Z-Setup.exe`** (installer, ~7 MB) — recommended. Installs the app,
+  adds Start-menu/desktop shortcuts, and installs the .NET 10 Desktop Runtime for you if
+  it is missing.
+- **`ClickLight-vX.Y.Z-win-x64.exe`** (bare app, ~250 KB) — for machines that already
+  have the .NET 10 Desktop Runtime. Just run it.
+
+Both are unsigned, so on first launch Windows SmartScreen may say "Windows protected your
+PC" — click **More info -> Run anyway**.
+
+## Requirements (to build)
 
 - Windows 10 21H2+ or Windows 11
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) (`dotnet --version` shows `10.x`)

@@ -1,6 +1,9 @@
 name: Release
 
-# Push a tag like v1.2.3 to build the standalone exe and publish a GitHub Release.
+# Push a tag like v1.2.3 to build the downloads and publish a GitHub Release.
+# Two assets are produced:
+#   * ClickLight-vX.Y.Z-win-x64.exe  - small framework-dependent app (needs .NET 10 installed)
+#   * ClickLight-vX.Y.Z-Setup.exe    - installer that also installs .NET 10 if it is missing
 on:
   push:
     tags: [ 'v*' ]
@@ -20,21 +23,41 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Publish self-contained single-file exe
+      - name: Version from tag
+        id: ver
+        shell: pwsh
+        run: "echo \"version=$('${{ github.ref_name }}'.TrimStart('v'))\" >> $env:GITHUB_OUTPUT"
+
+      - name: Publish bare app (framework-dependent, single file)
         run: >
           dotnet publish src/ClickLightWin/ClickLightWin.csproj
-          -c Release -r win-x64 --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeNativeLibrariesForSelfExtract=true
-          -o publish
+          -c Release -r win-x64 --no-self-contained
+          -p:PublishSingleFile=true -o single
 
-      - name: Name the artifact after the tag
+      - name: Publish app for the installer (framework-dependent)
+        run: >
+          dotnet publish src/ClickLightWin/ClickLightWin.csproj
+          -c Release -r win-x64 --no-self-contained -o app
+
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk --version 1.2.0
+
+      - name: Build installer (bootstraps .NET 10 if missing)
+        run: >
+          vpk pack -u ClickLight -v ${{ steps.ver.outputs.version }}
+          -p app -e ClickLightWin.exe -o releases
+          --framework net10.0-x64-desktop --packTitle ClickLight
+
+      - name: Stage release assets
         shell: pwsh
-        run: Copy-Item publish/ClickLightWin.exe "ClickLightWin-${{ github.ref_name }}-win-x64.exe"
+        run: |
+          New-Item -ItemType Directory -Force assets | Out-Null
+          Copy-Item single/ClickLightWin.exe "assets/ClickLight-${{ github.ref_name }}-win-x64.exe"
+          Copy-Item releases/ClickLight-win-Setup.exe "assets/ClickLight-${{ github.ref_name }}-Setup.exe"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ClickLightWin-*-win-x64.exe
+          files: assets/*
           generate_release_notes: true
           fail_on_unmatched_files: true
