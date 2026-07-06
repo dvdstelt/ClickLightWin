@@ -8,25 +8,24 @@ namespace ClickLightWin;
 /// Owns app lifetime and wires the pieces together. Milestone 1 wires the tray;
 /// Milestone 3 installs the mouse hook; Milestone 4 routes each press to a fading
 /// pulse; Milestone 5 fans overlays out across every monitor via OverlayManager.
+/// All settings live in a single observable <see cref="Settings"/> that the
+/// overlays read live and the store persists.
 /// </summary>
 public sealed class AppController : IDisposable
 {
-    private readonly Settings _settings = Settings.Default;
     private readonly LowLevelMouseHook _hook = new();
     private readonly HotKeyManager _hotKeys = new();
-    private readonly PreferencesStore _preferencesStore = new();
+    private readonly SettingsStore _settingsStore = new();
     private readonly LaunchAtLoginController _launchAtLogin = new();
-    private Preferences _preferences = new();
+    private Settings _settings = new();
     private TrayIcon? _tray;
     private OverlayManager? _overlays;
-    private bool _enabled = true;
 
     public void Start()
     {
-        _preferences = _preferencesStore.Load();
-        _enabled = _preferences.Enabled;
+        _settings = _settingsStore.Load();
 
-        _tray = new TrayIcon(_enabled, _launchAtLogin.IsEnabled);
+        _tray = new TrayIcon(_settings.Enabled, _launchAtLogin.IsEnabled);
         _tray.ToggleRequested += ToggleEnabled;
         _tray.LaunchAtLoginRequested += ToggleLaunchAtLogin;
         _tray.QuitRequested += () => Application.Current.Shutdown();
@@ -46,21 +45,21 @@ public sealed class AppController : IDisposable
 
     private void OnClick(ClickEvent click)
     {
-        if (!_enabled) return;
-        // Press draws a ring; drag draws a fading trail. Release has no visual yet
-        // (separate press/release visuals are a later M7 item).
+        if (!_settings.Enabled) return;
+        // Press draws a ring; drag draws a fading trail (when enabled). Release has
+        // no visual yet (separate press/release visuals are a later M7 item).
         if (click.Phase == ClickPhase.Up) return;
+        if (click.Phase == ClickPhase.Drag && !_settings.ShowDrag) return;
         _overlays?.Dispatch(click);
     }
 
     // Single toggle path for both the tray menu and the global hotkey, so the
-    // enabled state, persisted preference, and menu checkmark never diverge.
+    // enabled state, persisted setting, and menu checkmark never diverge.
     private void ToggleEnabled()
     {
-        _enabled = !_enabled;
-        _preferences.Enabled = _enabled;
-        _preferencesStore.Save(_preferences);
-        _tray?.SetEnabled(_enabled);
+        _settings.Enabled = !_settings.Enabled;
+        _settingsStore.Save(_settings);
+        _tray?.SetEnabled(_settings.Enabled);
     }
 
     private void ToggleLaunchAtLogin()
@@ -72,6 +71,7 @@ public sealed class AppController : IDisposable
 
     public void Dispose()
     {
+        _settingsStore.Save(_settings);
         _hook.Dispose();
         _hotKeys.Dispose();
         _overlays?.Dispose();

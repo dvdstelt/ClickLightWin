@@ -4,17 +4,17 @@ using System.Text.Json;
 namespace ClickLightWin;
 
 /// <summary>
-/// Loads and saves <see cref="Preferences"/> as JSON under
+/// Loads and saves <see cref="Settings"/> as JSON under
 /// %APPDATA%\ClickLightWin\settings.json. Missing or unreadable state falls back
 /// to defaults rather than throwing, so a corrupt file never blocks startup.
 /// </summary>
-public sealed class PreferencesStore
+public sealed class SettingsStore
 {
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
     private readonly string _path;
 
-    public PreferencesStore()
+    public SettingsStore()
     {
         var dir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -22,26 +22,26 @@ public sealed class PreferencesStore
         _path = Path.Combine(dir, "settings.json");
     }
 
-    public Preferences Load()
+    public Settings Load()
     {
         try
         {
             if (File.Exists(_path))
-                return JsonSerializer.Deserialize<Preferences>(File.ReadAllText(_path)) ?? new Preferences();
+                return JsonSerializer.Deserialize<Settings>(File.ReadAllText(_path)) ?? new Settings();
         }
         catch
         {
             // Corrupt or unreadable file: fall back to defaults.
         }
-        return new Preferences();
+        return new Settings();
     }
 
-    public void Save(Preferences preferences)
+    public void Save(Settings settings)
     {
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-            File.WriteAllText(_path, JsonSerializer.Serialize(preferences, Options));
+            File.WriteAllText(_path, JsonSerializer.Serialize(settings, Options));
         }
         catch
         {
