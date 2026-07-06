@@ -4,12 +4,18 @@ namespace ClickLightWin;
 
 public partial class App : Application
 {
+    private AppController? _controller;
+
     protected override void OnStartup(System.Windows.StartupEventArgs e)
     {
         base.OnStartup(e);
+        _controller = new AppController();
+        _controller.Start();
+    }
 
-        // Headless startup: no main window. AppController wiring (tray, mouse hook,
-        // overlays) lands in Milestone 1. Until the tray exists, quit via the debugger
-        // or by ending the process.
+    protected override void OnExit(System.Windows.ExitEventArgs e)
+    {
+        _controller?.Dispose();
+        base.OnExit(e);
     }
 }
