@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Windows.Threading;
 using ClickLightWin.Interop;
 
 namespace ClickLightWin;
@@ -15,6 +16,7 @@ public sealed class LowLevelKeyboardHook : IDisposable
     private readonly NativeMethods.LowLevelMouseProc _proc; // same (nCode, wParam, lParam) signature
     private readonly HashSet<int> _down = [];
     private nint _hookHandle;
+    private Dispatcher? _dispatcher;
 
     /// <summary>Raised on the UI thread with the key tokens, e.g. ["Ctrl", "Shift", "P"].</summary>
     public event Action<IReadOnlyList<string>>? ShortcutDetected;
@@ -26,6 +28,7 @@ public sealed class LowLevelKeyboardHook : IDisposable
     public void Install()
     {
         if (_hookHandle != 0) return;
+        _dispatcher = Dispatcher.CurrentDispatcher;
         var hMod = NativeMethods.GetModuleHandleW(null);
         _hookHandle = NativeMethods.SetWindowsHookExW(NativeMethods.WH_KEYBOARD_LL, _proc, hMod, 0);
         if (_hookHandle == 0)
@@ -55,7 +58,9 @@ public sealed class LowLevelKeyboardHook : IDisposable
                 if (!IsModifier(vk) && _down.Add(vk))
                 {
                     var keys = BuildShortcut(vk);
-                    if (keys is not null) ShortcutDetected?.Invoke(keys);
+                    // Queue instead of invoking inline: UI work must never run inside
+                    // the OS hook callback (latency + hook-timeout eviction risk).
+                    if (keys is not null) _dispatcher?.InvokeAsync(() => ShortcutDetected?.Invoke(keys));
                 }
             }
             else if (msg is NativeMethods.WM_KEYUP or NativeMethods.WM_SYSKEYUP)

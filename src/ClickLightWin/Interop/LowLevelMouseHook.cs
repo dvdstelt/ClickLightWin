@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Windows.Threading;
 using ClickLightWin.Interop;
 
 namespace ClickLightWin;
@@ -15,6 +16,7 @@ public sealed class LowLevelMouseHook : IDisposable
     // the callback becomes a dangling pointer and the app crashes.
     private readonly NativeMethods.LowLevelMouseProc _proc;
     private nint _hookHandle;
+    private Dispatcher? _dispatcher;
     private bool _leftDown, _rightDown, _middleDown;
 
     // In-progress Ctrl+Shift annotation gesture.
@@ -40,6 +42,7 @@ public sealed class LowLevelMouseHook : IDisposable
     public void Install()
     {
         if (_hookHandle != 0) return;
+        _dispatcher = Dispatcher.CurrentDispatcher;
         var hMod = NativeMethods.GetModuleHandleW(null);
         _hookHandle = NativeMethods.SetWindowsHookExW(NativeMethods.WH_MOUSE_LL, _proc, hMod, 0);
         if (_hookHandle == 0)
@@ -66,10 +69,15 @@ public sealed class LowLevelMouseHook : IDisposable
                 return 1;
 
             if (TryMap(msg, data, out var click))
-                ClickDetected?.Invoke(click); // handler marshals to Dispatcher if needed
+                Raise(() => ClickDetected?.Invoke(click));
         }
         return NativeMethods.CallNextHookEx(_hookHandle, nCode, wParam, lParam);
     }
+
+    // Queue handler work instead of invoking it inline: drawing (or any slow work)
+    // must never run inside the OS hook callback, or every mouse event system-wide
+    // pays the latency and Windows may silently drop the hook on timeout.
+    private void Raise(Action action) => _dispatcher?.InvokeAsync(action);
 
     /// <summary>
     /// Returns true if the event should be swallowed (kept from the app). We swallow
@@ -83,12 +91,14 @@ public sealed class LowLevelMouseHook : IDisposable
         {
             if (msg == NativeMethods.WM_MOUSEMOVE)
             {
-                AnnotationDetected?.Invoke(new(_annotatingTool, AnnotationPhase.Update, x, y));
+                var update = new AnnotationEvent(_annotatingTool, AnnotationPhase.Update, x, y);
+                Raise(() => AnnotationDetected?.Invoke(update));
                 return false; // let the move through so the cursor keeps moving
             }
             if (msg == _annotatingUpMsg)
             {
-                AnnotationDetected?.Invoke(new(_annotatingTool, AnnotationPhase.Commit, x, y));
+                var commit = new AnnotationEvent(_annotatingTool, AnnotationPhase.Commit, x, y);
+                Raise(() => AnnotationDetected?.Invoke(commit));
                 _annotating = false;
                 return true; // swallow the release
             }
@@ -106,7 +116,8 @@ public sealed class LowLevelMouseHook : IDisposable
         _annotating = true;
         _annotatingTool = msg == NativeMethods.WM_LBUTTONDOWN ? AnnotationTool.Arrow : AnnotationTool.Box;
         _annotatingUpMsg = msg == NativeMethods.WM_LBUTTONDOWN ? NativeMethods.WM_LBUTTONUP : NativeMethods.WM_RBUTTONUP;
-        AnnotationDetected?.Invoke(new(_annotatingTool, AnnotationPhase.Begin, x, y));
+        var begin = new AnnotationEvent(_annotatingTool, AnnotationPhase.Begin, x, y);
+        Raise(() => AnnotationDetected?.Invoke(begin));
         return true; // swallow the press so the app never starts a selection/drag
     }
 
