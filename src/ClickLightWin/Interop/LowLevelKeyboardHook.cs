@@ -89,10 +89,22 @@ public sealed class LowLevelKeyboardHook : IDisposable
         alt: NativeMethods.IsDown(NativeMethods.VK_MENU),
         shift: NativeMethods.IsDown(NativeMethods.VK_SHIFT),
         win: NativeMethods.IsDown(NativeMethods.VK_LWIN) || NativeMethods.IsDown(NativeMethods.VK_RWIN),
-        rightAlt: NativeMethods.IsDown(NativeMethods.VK_RMENU));
+        rightAlt: NativeMethods.IsDown(NativeMethods.VK_RMENU),
+        layoutKeyName: LayoutKeyName(vk));
+
+    // OEM key positions produce different characters per keyboard layout, so ask
+    // the active layout for the real character rather than assuming US punctuation.
+    // Named keys and letters/digits keep the fixed table.
+    private static string? LayoutKeyName(int vk)
+    {
+        if (vk is < 0xBA or > 0xE2) return KeyName(vk);
+        var mapped = NativeMethods.MapVirtualKeyW((uint)vk, NativeMethods.MAPVK_VK_TO_CHAR);
+        var c = (char)(mapped & 0xFFFF); // low word is the character; bit 31 flags dead keys
+        return c > ' ' ? c.ToString() : KeyName(vk);
+    }
 
     /// <summary>Pure shortcut-building logic, separated from live key state for testability.</summary>
-    internal static IReadOnlyList<string>? BuildShortcut(int vk, bool ctrl, bool alt, bool shift, bool win, bool rightAlt)
+    internal static IReadOnlyList<string>? BuildShortcut(int vk, bool ctrl, bool alt, bool shift, bool win, bool rightAlt, string? layoutKeyName = null)
     {
         // AltGr (right Alt) arrives as Ctrl+Alt on international layouts (e.g. US
         // International accents like AltGr+A). That is plain typing, not a
@@ -103,7 +115,7 @@ public sealed class LowLevelKeyboardHook : IDisposable
         // plain typing and is never shown.
         if (!ctrl && !alt && !win) return null;
 
-        var name = KeyName(vk);
+        var name = layoutKeyName ?? KeyName(vk);
         if (name is null) return null;
 
         var keys = new List<string>(5);

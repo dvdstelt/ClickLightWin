@@ -120,6 +120,11 @@ internal static partial class NativeMethods
 
     public static bool IsDown(int vKey) => (GetAsyncKeyState(vKey) & 0x8000) != 0;
 
+    public const uint MAPVK_VK_TO_CHAR = 2;
+
+    [LibraryImport("user32.dll")]
+    public static partial uint MapVirtualKeyW(uint uCode, uint uMapType);
+
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool GetCursorPos(out POINT lpPoint);
