@@ -84,7 +84,7 @@ public partial class OverlayWindow : Window
     private Point ToLocal(int physX, int physY)
     {
         var dpi = VisualTreeHelper.GetDpi(this);
-        return CoordinateMapper.PhysicalToLocalDips(physX, physY, _screen, dpi);
+        return CoordinateMapper.PhysicalToLocalDips(physX, physY, _screen.Bounds, dpi);
     }
 
     /// <summary>Physical-pixel bounds of this overlay's monitor, for hit-testing.</summary>

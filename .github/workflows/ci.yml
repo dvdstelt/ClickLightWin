@@ -20,3 +20,6 @@ jobs:
 
       - name: Build
         run: dotnet build src/ClickLightWin.sln -c Release
+
+      - name: Test
+        run: dotnet test src/ClickLightWin.Tests/ClickLightWin.Tests.csproj -c Release
