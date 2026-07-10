@@ -71,6 +71,14 @@ public partial class OverlayWindow : Window
         _shortcuts.Show(keys, settings);
     }
 
+    protected override void OnClosed(EventArgs e)
+    {
+        // The laser subscribes to the static CompositionTarget.Rendering event;
+        // detach or the closed window is kept alive (and rendered to) forever.
+        _laser?.Dispose();
+        base.OnClosed(e);
+    }
+
     private Point ToLocal(ClickEvent click) => ToLocal(click.ScreenX, click.ScreenY);
 
     private Point ToLocal(int physX, int physY)

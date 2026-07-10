@@ -18,7 +18,7 @@ namespace ClickLightWin.Rendering;
 /// layered lines (wide soft glow, mid, thin near-white core) so it reads as a
 /// glowing red line with a bright center, matching ClickOverlayView.swift.
 /// </summary>
-public sealed class LaserRenderer
+public sealed class LaserRenderer : IDisposable
 {
     private readonly Canvas _canvas;
     private readonly Grid _glow;
@@ -192,6 +192,22 @@ public sealed class LaserRenderer
         HorizontalAlignment = HorizontalAlignment.Center,
         VerticalAlignment = VerticalAlignment.Center
     };
+
+    /// <summary>
+    /// Detach from CompositionTarget.Rendering (a static event that would otherwise
+    /// keep this renderer, its canvas, and a closed overlay window alive forever)
+    /// and stop the idle timer. Must be called when the owning overlay closes,
+    /// e.g. on a display-settings rebuild.
+    /// </summary>
+    public void Dispose()
+    {
+        _idle.Stop();
+        if (_rendering)
+        {
+            CompositionTarget.Rendering -= OnRendering;
+            _rendering = false;
+        }
+    }
 
     private static Color WithAlpha(Color c, double a) => Color.FromArgb((byte)(a * 255), c.R, c.G, c.B);
 
