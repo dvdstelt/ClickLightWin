@@ -48,24 +48,31 @@ public sealed class LowLevelKeyboardHook : IDisposable
     {
         if (nCode >= 0)
         {
-            var msg = (int)wParam;
-            var data = Marshal.PtrToStructure<NativeMethods.KBDLLHOOKSTRUCT>(lParam);
-            var vk = (int)data.vkCode;
-
-            if (msg is NativeMethods.WM_KEYDOWN or NativeMethods.WM_SYSKEYDOWN)
+            try
             {
-                // _down.Add returns false if already present, so auto-repeat is ignored.
-                if (!IsModifier(vk) && _down.Add(vk))
+                var msg = (int)wParam;
+                var data = Marshal.PtrToStructure<NativeMethods.KBDLLHOOKSTRUCT>(lParam);
+                var vk = (int)data.vkCode;
+
+                if (msg is NativeMethods.WM_KEYDOWN or NativeMethods.WM_SYSKEYDOWN)
                 {
-                    var keys = BuildShortcut(vk);
-                    // Queue instead of invoking inline: UI work must never run inside
-                    // the OS hook callback (latency + hook-timeout eviction risk).
-                    if (keys is not null) _dispatcher?.InvokeAsync(() => ShortcutDetected?.Invoke(keys));
+                    // _down.Add returns false if already present, so auto-repeat is ignored.
+                    if (!IsModifier(vk) && _down.Add(vk))
+                    {
+                        var keys = BuildShortcut(vk);
+                        // Queue instead of invoking inline: UI work must never run inside
+                        // the OS hook callback (latency + hook-timeout eviction risk).
+                        if (keys is not null) _dispatcher?.InvokeAsync(() => ShortcutDetected?.Invoke(keys));
+                    }
+                }
+                else if (msg is NativeMethods.WM_KEYUP or NativeMethods.WM_SYSKEYUP)
+                {
+                    _down.Remove(vk);
                 }
             }
-            else if (msg is NativeMethods.WM_KEYUP or NativeMethods.WM_SYSKEYUP)
+            catch
             {
-                _down.Remove(vk);
+                // Never let an exception cross the OS hook boundary.
             }
         }
         return NativeMethods.CallNextHookEx(_hookHandle, nCode, wParam, lParam);

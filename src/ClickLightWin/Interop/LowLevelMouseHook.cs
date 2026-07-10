@@ -61,15 +61,23 @@ public sealed class LowLevelMouseHook : IDisposable
     {
         if (nCode >= 0)
         {
-            var data = Marshal.PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
-            var msg = (int)wParam;
+            try
+            {
+                var data = Marshal.PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
+                var msg = (int)wParam;
 
-            // Annotation gestures are swallowed so the drag never reaches the app.
-            if (HandleAnnotation(msg, data.pt.X, data.pt.Y))
-                return 1;
+                // Annotation gestures are swallowed so the drag never reaches the app.
+                if (HandleAnnotation(msg, data.pt.X, data.pt.Y))
+                    return 1;
 
-            if (TryMap(msg, data, out var click))
-                Raise(() => ClickDetected?.Invoke(click));
+                if (TryMap(msg, data, out var click))
+                    Raise(() => ClickDetected?.Invoke(click));
+            }
+            catch
+            {
+                // Never let an exception cross the OS hook boundary; the event is
+                // simply dropped and the hook chain continues.
+            }
         }
         return NativeMethods.CallNextHookEx(_hookHandle, nCode, wParam, lParam);
     }
