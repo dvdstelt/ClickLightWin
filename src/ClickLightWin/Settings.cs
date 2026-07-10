@@ -32,6 +32,9 @@ public sealed class Settings : INotifyPropertyChanged
 
     // ---- Persisted, user-editable -------------------------------------------
 
+    /// <summary>Bump when the persisted shape changes, so future loads can migrate.</summary>
+    public int SchemaVersion { get; set; } = 1;
+
     public bool Enabled { get => _enabled; set => Set(ref _enabled, value); }
     public bool ShowDrag { get => _showDrag; set => Set(ref _showDrag, value); }
     public bool ShowRelease { get => _showRelease; set => Set(ref _showRelease, value); }
