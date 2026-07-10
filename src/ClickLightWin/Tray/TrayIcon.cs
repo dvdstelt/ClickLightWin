@@ -14,6 +14,8 @@ public sealed class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _icon;
     private readonly Icon _iconImage;
+    private readonly ContextMenuStrip _menu;
+    private readonly Font _menuFont;
     private readonly Settings _settings;
     private readonly LaunchAtLoginController _launchAtLogin;
     private readonly Action _persist;
@@ -33,11 +35,12 @@ public sealed class TrayIcon : IDisposable
         _launchAtLogin = launchAtLogin;
         _persist = persist;
 
-        var menu = new ContextMenuStrip
+        _menuFont = new Font("Segoe UI", 9f);
+        var menu = _menu = new ContextMenuStrip
         {
             Renderer = new DarkMenuRenderer(),
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 9f)
+            Font = _menuFont
         };
         menu.Opening += (_, _) => RefreshChecks();
 
@@ -140,5 +143,7 @@ public sealed class TrayIcon : IDisposable
         _icon.Visible = false;
         _icon.Dispose();
         _iconImage.Dispose();
+        _menu.Dispose(); // NotifyIcon does not own its ContextMenuStrip
+        _menuFont.Dispose();
     }
 }
