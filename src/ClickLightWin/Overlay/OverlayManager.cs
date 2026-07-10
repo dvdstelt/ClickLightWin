@@ -57,18 +57,34 @@ public sealed class OverlayManager : IDisposable
     // The overlay that owns the in-progress annotation gesture, so its update and
     // commit stay on the monitor where the drag began even if the cursor crosses monitors.
     private OverlayWindow? _annotatingOverlay;
+    private (int X, int Y)? _annotationStart;
+
+    // Committed annotations in physical pixels, so they can be re-rendered onto
+    // fresh overlays (at the then-current DPI) after a display-settings rebuild.
+    // Gestures the renderer rejected as too small are re-filtered on replay.
+    private readonly record struct CommittedAnnotation(AnnotationTool Tool, int StartX, int StartY, int EndX, int EndY);
+    private readonly List<CommittedAnnotation> _committed = [];
 
     public void DispatchAnnotation(AnnotationEvent evt)
     {
         if (evt.Phase == AnnotationPhase.Begin)
+        {
             _annotatingOverlay = FindByPoint(evt.ScreenX, evt.ScreenY);
+            _annotationStart = (evt.ScreenX, evt.ScreenY);
+        }
         _annotatingOverlay?.Annotate(evt, _settings);
         if (evt.Phase == AnnotationPhase.Commit)
+        {
+            if (_annotatingOverlay is not null && _annotationStart is { } start)
+                _committed.Add(new(evt.Tool, start.X, start.Y, evt.ScreenX, evt.ScreenY));
             _annotatingOverlay = null;
+            _annotationStart = null;
+        }
     }
 
     public void ClearAnnotations()
     {
+        _committed.Clear();
         foreach (var overlay in _overlays) overlay.ClearAnnotations();
     }
 
@@ -111,6 +127,7 @@ public sealed class OverlayManager : IDisposable
         // Any in-progress gesture belongs to a window that is about to close;
         // drop the owner references so events don't route to a dead overlay.
         _annotatingOverlay = null;
+        _annotationStart = null;
         _laserOverlay = null;
 
         foreach (var o in _overlays) o.Close();
@@ -121,6 +138,16 @@ public sealed class OverlayManager : IDisposable
             var overlay = new OverlayWindow(screen);
             overlay.Show(); // shown but transparent + click-through; never activated
             _overlays.Add(overlay);
+        }
+
+        // Re-render committed annotations onto the fresh overlays. Each replays as a
+        // begin+commit on the monitor containing its start point; annotations on a
+        // monitor that is currently unplugged are skipped and reappear when it returns.
+        foreach (var a in _committed)
+        {
+            var overlay = FindByPoint(a.StartX, a.StartY);
+            overlay?.Annotate(new(a.Tool, AnnotationPhase.Begin, a.StartX, a.StartY), _settings);
+            overlay?.Annotate(new(a.Tool, AnnotationPhase.Commit, a.EndX, a.EndY), _settings);
         }
     }
 
