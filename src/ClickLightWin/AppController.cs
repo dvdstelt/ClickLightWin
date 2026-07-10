@@ -57,6 +57,7 @@ public sealed class AppController : IDisposable
         _hotKeys.TogglePressed += ToggleEnabled;
         _hotKeys.ClearPressed += ClearAnnotations;
         _hotKeys.Register();
+        WarnAboutUnavailableHotkeys();
 
         // Install the system-wide mouse hook on the UI thread so the callback fires
         // here and can touch the overlays without cross-thread marshaling.
@@ -81,6 +82,18 @@ public sealed class AppController : IDisposable
 
     // The high-frequency move stream is only worth processing while the laser can draw.
     private bool MovesActive => _settings.Enabled && _settings.ShowLaserPointer;
+
+    // If another app owns a hotkey, RegisterHotKey fails silently; tell the user
+    // once so a dead shortcut is not mistaken for a ClickLight bug.
+    private void WarnAboutUnavailableHotkeys()
+    {
+        var taken = new List<string>();
+        if (!_hotKeys.ToggleRegistered) taken.Add("Ctrl+Shift+L (toggle)");
+        if (!_hotKeys.ClearRegistered) taken.Add("Ctrl+Shift+C (clear annotations)");
+        if (taken.Count == 0) return;
+        _tray?.ShowWarning("ClickLight hotkey unavailable",
+            $"Another app already uses {string.Join(" and ", taken)}. That shortcut won't work while it does.");
+    }
 
     // Left-drag draws an arrow, right-drag a box; the hook tags each with its tool.
     private void OnAnnotation(AnnotationEvent evt) => _overlays?.DispatchAnnotation(evt);

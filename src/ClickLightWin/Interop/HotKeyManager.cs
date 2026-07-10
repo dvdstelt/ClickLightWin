@@ -16,10 +16,15 @@ public sealed class HotKeyManager : IDisposable
     private const uint VkC = 0x43; // 'C'
 
     private HwndSource? _source;
-    private bool _toggleRegistered, _clearRegistered;
 
     public event Action? TogglePressed;
     public event Action? ClearPressed;
+
+    /// <summary>False when another application already owns the combination.</summary>
+    public bool ToggleRegistered { get; private set; }
+
+    /// <summary>False when another application already owns the combination.</summary>
+    public bool ClearRegistered { get; private set; }
 
     public void Register()
     {
@@ -34,8 +39,8 @@ public sealed class HotKeyManager : IDisposable
         _source.AddHook(WndProc);
 
         const uint mod = NativeMethods.MOD_CONTROL | NativeMethods.MOD_SHIFT | NativeMethods.MOD_NOREPEAT;
-        _toggleRegistered = NativeMethods.RegisterHotKey(_source.Handle, ToggleHotKeyId, mod, VkL);
-        _clearRegistered = NativeMethods.RegisterHotKey(_source.Handle, ClearHotKeyId, mod, VkC);
+        ToggleRegistered = NativeMethods.RegisterHotKey(_source.Handle, ToggleHotKeyId, mod, VkL);
+        ClearRegistered = NativeMethods.RegisterHotKey(_source.Handle, ClearHotKeyId, mod, VkC);
     }
 
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
@@ -52,8 +57,8 @@ public sealed class HotKeyManager : IDisposable
     public void Dispose()
     {
         if (_source is null) return;
-        if (_toggleRegistered) NativeMethods.UnregisterHotKey(_source.Handle, ToggleHotKeyId);
-        if (_clearRegistered) NativeMethods.UnregisterHotKey(_source.Handle, ClearHotKeyId);
+        if (ToggleRegistered) NativeMethods.UnregisterHotKey(_source.Handle, ToggleHotKeyId);
+        if (ClearRegistered) NativeMethods.UnregisterHotKey(_source.Handle, ClearHotKeyId);
         _source.RemoveHook(WndProc);
         _source.Dispose();
         _source = null;

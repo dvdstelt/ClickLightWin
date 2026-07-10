@@ -106,6 +106,10 @@ public sealed class TrayIcon : IDisposable
         return parent;
     }
 
+    /// <summary>Show a transient warning balloon from the tray icon.</summary>
+    public void ShowWarning(string title, string text) =>
+        _icon.ShowBalloonTip(5000, title, text, ToolTipIcon.Warning);
+
     private void Toggle(Action<Settings> mutate)
     {
         mutate(_settings);
