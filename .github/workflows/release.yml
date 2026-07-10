@@ -1,9 +1,10 @@
 name: Release
 
 # Push a tag like v1.2.3 to build the downloads and publish a GitHub Release.
-# Two assets are produced:
-#   * ClickLight-vX.Y.Z-win-x64.exe  - small framework-dependent app (needs .NET 10 installed)
-#   * ClickLight-vX.Y.Z-Setup.exe    - installer that also installs .NET 10 if it is missing
+# Three assets are produced:
+#   * ClickLight-vX.Y.Z-win-x64.exe   - small framework-dependent app (needs .NET 10 installed)
+#   * ClickLight-vX.Y.Z-win-arm64.exe - the same for Windows-on-Arm machines
+#   * ClickLight-vX.Y.Z-Setup.exe     - x64 installer that also installs .NET 10 if it is missing
 #
 # Code signing (SignPath, free for open-source) is applied automatically once the
 # repository is configured for it. The signing steps are skipped until then, so an
@@ -38,6 +39,12 @@ jobs:
           -c Release -r win-x64 --no-self-contained
           -p:PublishSingleFile=true -o single
 
+      - name: Publish bare app for arm64
+        run: >
+          dotnet publish src/ClickLightWin/ClickLightWin.csproj
+          -c Release -r win-arm64 --no-self-contained
+          -p:PublishSingleFile=true -o single-arm64
+
       - name: Publish app for the installer (framework-dependent)
         run: >
           dotnet publish src/ClickLightWin/ClickLightWin.csproj
@@ -57,6 +64,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force assets | Out-Null
           Copy-Item single/ClickLightWin.exe "assets/ClickLight-${{ github.ref_name }}-win-x64.exe"
+          Copy-Item single-arm64/ClickLightWin.exe "assets/ClickLight-${{ github.ref_name }}-win-arm64.exe"
           Copy-Item releases/ClickLight-win-Setup.exe "assets/ClickLight-${{ github.ref_name }}-Setup.exe"
 
       # ---- Code signing via SignPath (skipped until repo variables are set) ----

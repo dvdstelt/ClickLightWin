@@ -38,6 +38,8 @@ Grab the latest from the [Releases](../../releases) page. Two options:
   it is missing.
 - **`ClickLight-vX.Y.Z-win-x64.exe`** (bare app, ~250 KB) — for machines that already
   have the .NET 10 Desktop Runtime. Just run it.
+- **`ClickLight-vX.Y.Z-win-arm64.exe`** — the same bare app for Windows-on-Arm
+  (needs the arm64 .NET 10 Desktop Runtime).
 
 Until code signing is set up (see below), both are unsigned, so on first launch Windows
 SmartScreen may say "Windows protected your PC" — click **More info -> Run anyway**.
