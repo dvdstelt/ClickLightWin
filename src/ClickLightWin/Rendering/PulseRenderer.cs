@@ -27,6 +27,9 @@ public sealed class PulseRenderer(Canvas canvas)
                 SpawnDragDot(center, settings);
                 return;
             case ClickPhase.Up:
+                // End of a drag: reset the trail throttle so the next drag's first
+                // dot isn't skipped for starting near this one's end.
+                _lastDragPoint = null;
                 SpawnReleaseRing(center, click, settings);
                 return;
             default:
