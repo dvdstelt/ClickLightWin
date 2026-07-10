@@ -76,12 +76,21 @@ public sealed class LowLevelKeyboardHook : IDisposable
             or NativeMethods.VK_LWIN or NativeMethods.VK_RWIN
             or 0xA0 or 0xA1 or 0xA2 or 0xA3 or 0xA4 or 0xA5; // L/R Shift, Ctrl, Alt
 
-    private static IReadOnlyList<string>? BuildShortcut(int vk)
+    private static IReadOnlyList<string>? BuildShortcut(int vk) => BuildShortcut(
+        vk,
+        ctrl: NativeMethods.IsDown(NativeMethods.VK_CONTROL),
+        alt: NativeMethods.IsDown(NativeMethods.VK_MENU),
+        shift: NativeMethods.IsDown(NativeMethods.VK_SHIFT),
+        win: NativeMethods.IsDown(NativeMethods.VK_LWIN) || NativeMethods.IsDown(NativeMethods.VK_RWIN),
+        rightAlt: NativeMethods.IsDown(NativeMethods.VK_RMENU));
+
+    /// <summary>Pure shortcut-building logic, separated from live key state for testability.</summary>
+    internal static IReadOnlyList<string>? BuildShortcut(int vk, bool ctrl, bool alt, bool shift, bool win, bool rightAlt)
     {
-        var ctrl = NativeMethods.IsDown(NativeMethods.VK_CONTROL);
-        var alt = NativeMethods.IsDown(NativeMethods.VK_MENU);
-        var win = NativeMethods.IsDown(NativeMethods.VK_LWIN) || NativeMethods.IsDown(NativeMethods.VK_RWIN);
-        var shift = NativeMethods.IsDown(NativeMethods.VK_SHIFT);
+        // AltGr (right Alt) arrives as Ctrl+Alt on international layouts (e.g. US
+        // International accents like AltGr+A). That is plain typing, not a
+        // shortcut, so it must never be shown.
+        if (ctrl && rightAlt) return null;
 
         // Privacy filter: require Ctrl/Alt/Win. Shift-only (e.g. capital letters) is
         // plain typing and is never shown.
@@ -99,7 +108,7 @@ public sealed class LowLevelKeyboardHook : IDisposable
         return keys;
     }
 
-    private static string? KeyName(int vk) => vk switch
+    internal static string? KeyName(int vk) => vk switch
     {
         >= 0x41 and <= 0x5A => ((char)vk).ToString(),              // A-Z
         >= 0x30 and <= 0x39 => ((char)vk).ToString(),              // 0-9
