@@ -24,8 +24,35 @@ public sealed class OverlayManager : IDisposable
     /// <summary>Route a click (physical pixels) to the overlay that contains it.</summary>
     public void Dispatch(ClickEvent click) => Find(click)?.ShowPulse(click, _settings);
 
+    // The overlay whose laser stroke is in progress. If the cursor crosses to
+    // another monitor mid-stroke, the stroke is completed on the old overlay and a
+    // fresh one starts on the new, so no stroke is ever left behind un-faded.
+    private OverlayWindow? _laserOverlay;
+
     /// <summary>Route a laser event (physical pixels) to the overlay that contains it.</summary>
-    public void DispatchLaser(ClickEvent click) => Find(click)?.Laser(click, _settings);
+    public void DispatchLaser(ClickEvent click)
+    {
+        var target = Find(click);
+        if (target is null) return;
+
+        if (_laserOverlay is not null && !ReferenceEquals(_laserOverlay, target)
+            && click.Phase is ClickPhase.Drag or ClickPhase.Up)
+        {
+            // Stroke crossed monitors: finish it where it started...
+            _laserOverlay.Laser(click with { Phase = ClickPhase.Up }, _settings);
+            // ...and continue drawing on the monitor the cursor is on now.
+            if (click.Phase == ClickPhase.Drag)
+                target.Laser(click with { Phase = ClickPhase.Down }, _settings);
+        }
+
+        _laserOverlay = click.Phase switch
+        {
+            ClickPhase.Down or ClickPhase.Drag => target,
+            ClickPhase.Up => null,
+            _ => _laserOverlay
+        };
+        target.Laser(click, _settings);
+    }
 
     // The overlay that owns the in-progress annotation gesture, so its update and
     // commit stay on the monitor where the drag began even if the cursor crosses monitors.
@@ -81,6 +108,11 @@ public sealed class OverlayManager : IDisposable
 
     private void Rebuild()
     {
+        // Any in-progress gesture belongs to a window that is about to close;
+        // drop the owner references so events don't route to a dead overlay.
+        _annotatingOverlay = null;
+        _laserOverlay = null;
+
         foreach (var o in _overlays) o.Close();
         _overlays.Clear();
 
