@@ -27,17 +27,16 @@ public sealed class AppController : IDisposable
     public void Start()
     {
         _settings = _settingsStore.Load();
-        _hook.EmitMoves = _settings.ShowLaserPointer; // only track moves when the laser needs them
+        _hook.EmitMoves = MovesActive; // only track the move stream when the laser needs it
         _hook.AnnotationsEnabled = AnnotationsActive;
-        // React to settings changes: move tracking follows the laser; the annotation
-        // gesture is only armed when the tool is on and annotations are enabled.
+        // React to settings changes: move tracking follows the laser (and Enabled);
+        // the annotation gesture is only armed while the tool is on.
         _settings.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName == nameof(Settings.ShowLaserPointer))
-                _hook.EmitMoves = _settings.ShowLaserPointer;
-            else if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.EnableAnnotations))
+            if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.ShowLaserPointer))
+                _hook.EmitMoves = MovesActive;
+            if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.EnableAnnotations))
                 _hook.AnnotationsEnabled = AnnotationsActive;
-
             if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.ShowShortcuts))
                 UpdateKeyboardHook();
         };
@@ -79,6 +78,9 @@ public sealed class AppController : IDisposable
 
     // Ctrl+Shift annotation gestures are armed only while the tool is enabled.
     private bool AnnotationsActive => _settings.Enabled && _settings.EnableAnnotations;
+
+    // The high-frequency move stream is only worth processing while the laser can draw.
+    private bool MovesActive => _settings.Enabled && _settings.ShowLaserPointer;
 
     // Left-drag draws an arrow, right-drag a box; the hook tags each with its tool.
     private void OnAnnotation(AnnotationEvent evt) => _overlays?.DispatchAnnotation(evt);
