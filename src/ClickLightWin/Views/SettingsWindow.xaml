@@ -239,7 +239,7 @@
           <TextBlock Text="toggle" Foreground="{StaticResource Muted}" VerticalAlignment="Center" Margin="8,0,0,0" />
         </StackPanel>
         <TextBlock Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap"
-                   Text="Ctrl+Shift + left-drag = arrow, right-drag = box • Ctrl+Shift+C clears" />
+                   Text="Ctrl+Shift + left-drag = arrow, right-drag = box • Ctrl+Shift+C clears&#x0a;Ctrl + drag = laser stroke (while laser pointer is on)" />
         <TextBlock Text="Rebinding coming soon." Foreground="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0" />
       </StackPanel>
     </Border>

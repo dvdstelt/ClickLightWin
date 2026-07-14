@@ -27,14 +27,18 @@ public sealed class AppController : IDisposable
     public void Start()
     {
         _settings = _settingsStore.Load();
-        _hook.EmitMoves = MovesActive; // only track the move stream when the laser needs it
+        _hook.EmitMoves = LaserActive; // only track the move stream when the laser needs it
+        _hook.LaserStrokeEnabled = LaserActive;
         _hook.AnnotationsEnabled = AnnotationsActive;
-        // React to settings changes: move tracking follows the laser (and Enabled);
-        // the annotation gesture is only armed while the tool is on.
+        // React to settings changes: the glow move stream and the Ctrl+drag laser
+        // stroke follow the laser (and Enabled); annotations follow their own toggle.
         _settings.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.ShowLaserPointer))
-                _hook.EmitMoves = MovesActive;
+            {
+                _hook.EmitMoves = LaserActive;
+                _hook.LaserStrokeEnabled = LaserActive;
+            }
             if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.EnableAnnotations))
                 _hook.AnnotationsEnabled = AnnotationsActive;
             if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.ShowShortcuts))
@@ -80,8 +84,8 @@ public sealed class AppController : IDisposable
     // Ctrl+Shift annotation gestures are armed only while the tool is enabled.
     private bool AnnotationsActive => _settings.Enabled && _settings.EnableAnnotations;
 
-    // The high-frequency move stream is only worth processing while the laser can draw.
-    private bool MovesActive => _settings.Enabled && _settings.ShowLaserPointer;
+    // The laser features (glow move stream, Ctrl+drag stroke) run only while the laser is on.
+    private bool LaserActive => _settings.Enabled && _settings.ShowLaserPointer;
 
     // If another app owns a hotkey, RegisterHotKey fails silently; tell the user
     // once so a dead shortcut is not mistaken for a ClickLight bug.
@@ -111,7 +115,6 @@ public sealed class AppController : IDisposable
             case ClickPhase.Down:
                 _pressTicks[click.Button] = Environment.TickCount64;
                 _overlays?.Dispatch(click); // expanding press ring
-                if (_settings.ShowLaserPointer) _overlays?.DispatchLaser(click); // start a stroke
                 break;
 
             case ClickPhase.Move:
@@ -119,9 +122,9 @@ public sealed class AppController : IDisposable
                 break;
 
             case ClickPhase.Drag:
-                // In laser mode the drag becomes a freehand stroke instead of the dot trail.
-                if (_settings.ShowLaserPointer) _overlays?.DispatchLaser(click);
-                else if (_settings.ShowDrag) _overlays?.Dispatch(click);
+                // A plain drag shows the dot trail. The laser stroke is the explicit
+                // Ctrl+drag gesture, handled (and swallowed) via the annotation path.
+                if (_settings.ShowDrag) _overlays?.Dispatch(click);
                 break;
 
             case ClickPhase.Up:
@@ -130,7 +133,6 @@ public sealed class AppController : IDisposable
                 var held = _pressTicks.TryGetValue(click.Button, out var down)
                            && Environment.TickCount64 - down >= _settings.ReleaseMinHoldMs;
                 _pressTicks.Remove(click.Button);
-                if (_settings.ShowLaserPointer) _overlays?.DispatchLaser(click); // finish the stroke
                 if (_settings.ShowRelease && held) _overlays?.Dispatch(click);
                 break;
         }

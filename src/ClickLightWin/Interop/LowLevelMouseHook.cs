@@ -37,6 +37,9 @@ public sealed class LowLevelMouseHook : IDisposable
     /// <summary>When true, Ctrl+Shift + drag draws annotations instead of clicking through.</summary>
     public bool AnnotationsEnabled { get; set; }
 
+    /// <summary>When true, Ctrl + left-drag draws a laser stroke (swallowed, like annotations).</summary>
+    public bool LaserStrokeEnabled { get; set; }
+
     public LowLevelMouseHook() => _proc = HookCallback;
 
     public void Install()
@@ -116,13 +119,21 @@ public sealed class LowLevelMouseHook : IDisposable
                 or NativeMethods.WM_RBUTTONUP or NativeMethods.WM_MBUTTONUP;
         }
 
-        if (!AnnotationsEnabled) return false;
         var isDown = msg is NativeMethods.WM_LBUTTONDOWN or NativeMethods.WM_RBUTTONDOWN;
-        if (!isDown || !NativeMethods.IsDown(NativeMethods.VK_CONTROL) || !NativeMethods.IsDown(NativeMethods.VK_SHIFT))
+        if (!isDown || !NativeMethods.IsDown(NativeMethods.VK_CONTROL)) return false;
+
+        // Ctrl+Shift + drag = a permanent annotation (arrow/box by button).
+        // Ctrl + left-drag = a temporary laser stroke. Both are swallowed so the
+        // gesture never reaches the app underneath.
+        var shift = NativeMethods.IsDown(NativeMethods.VK_SHIFT);
+        if (shift && AnnotationsEnabled)
+            _annotatingTool = msg == NativeMethods.WM_LBUTTONDOWN ? AnnotationTool.Arrow : AnnotationTool.Box;
+        else if (!shift && LaserStrokeEnabled && msg == NativeMethods.WM_LBUTTONDOWN)
+            _annotatingTool = AnnotationTool.LaserStroke;
+        else
             return false;
 
         _annotating = true;
-        _annotatingTool = msg == NativeMethods.WM_LBUTTONDOWN ? AnnotationTool.Arrow : AnnotationTool.Box;
         _annotatingUpMsg = msg == NativeMethods.WM_LBUTTONDOWN ? NativeMethods.WM_LBUTTONUP : NativeMethods.WM_RBUTTONUP;
         var begin = new AnnotationEvent(_annotatingTool, AnnotationPhase.Begin, x, y);
         Raise(() => AnnotationDetected?.Invoke(begin));

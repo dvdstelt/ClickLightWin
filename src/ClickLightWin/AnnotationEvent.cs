@@ -1,10 +1,11 @@
 namespace ClickLightWin;
 
-/// <summary>Which annotation shape a Ctrl+Shift gesture draws (by mouse button).</summary>
+/// <summary>Which shape a Ctrl(+Shift) gesture draws.</summary>
 public enum AnnotationTool
 {
-    Arrow, // left-drag
-    Box    // right-drag (not drawn yet; reserved for a later milestone)
+    Arrow,       // Ctrl+Shift + left-drag  (permanent)
+    Box,         // Ctrl+Shift + right-drag (permanent)
+    LaserStroke  // Ctrl + left-drag        (temporary, fades; drawn by the laser renderer)
 }
 
 /// <summary>The phase of an annotation gesture.</summary>
