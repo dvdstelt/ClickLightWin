@@ -71,8 +71,17 @@ public sealed class TrayIcon : IDisposable
         {
             Icon = _iconImage,
             Text = "ClickLight",
-            Visible = true,
-            ContextMenuStrip = menu
+            Visible = true
+        };
+
+        // Show the menu ourselves, opening upward from the cursor. WinForms' automatic
+        // placement doesn't reliably flip a tall tray menu above a bottom taskbar, so
+        // lower items (Quit) can fall behind it. ToolStripDropDown still clamps to the
+        // screen, so this stays correct for other taskbar positions too.
+        _icon.MouseUp += (_, e) =>
+        {
+            if (e.Button == MouseButtons.Right)
+                menu.Show(Cursor.Position, ToolStripDropDownDirection.AboveLeft);
         };
     }
 
