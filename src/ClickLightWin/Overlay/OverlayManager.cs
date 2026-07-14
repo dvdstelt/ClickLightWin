@@ -91,6 +91,15 @@ public sealed class OverlayManager : IDisposable
         foreach (var overlay in _overlays) overlay.ClearAnnotations();
     }
 
+    private bool _drawMode;
+
+    /// <summary>Enter or leave the frozen drawing mode on every monitor.</summary>
+    public void SetDrawMode(bool on)
+    {
+        _drawMode = on;
+        foreach (var overlay in _overlays) overlay.SetDrawMode(on);
+    }
+
     /// <summary>Show a keyboard shortcut on the monitor that currently holds the cursor.</summary>
     public void DispatchShortcut(IReadOnlyList<string> keys)
     {
@@ -140,6 +149,7 @@ public sealed class OverlayManager : IDisposable
         {
             var overlay = new OverlayWindow(screen);
             overlay.Show(); // shown but transparent + click-through; never activated
+            if (_drawMode) overlay.SetDrawMode(true); // keep drawing mode across a rebuild
             _overlays.Add(overlay);
         }
 

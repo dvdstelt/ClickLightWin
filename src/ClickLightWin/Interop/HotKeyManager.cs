@@ -12,19 +12,25 @@ public sealed class HotKeyManager : IDisposable
 {
     private const int ToggleHotKeyId = 1;
     private const int ClearHotKeyId = 2;
+    private const int DrawModeHotKeyId = 3;
     private const uint VkL = 0x4C; // 'L'
     private const uint VkC = 0x43; // 'C'
+    private const uint VkD = 0x44; // 'D'
 
     private HwndSource? _source;
 
     public event Action? TogglePressed;
     public event Action? ClearPressed;
+    public event Action? DrawModePressed;
 
     /// <summary>False when another application already owns the combination.</summary>
     public bool ToggleRegistered { get; private set; }
 
     /// <summary>False when another application already owns the combination.</summary>
     public bool ClearRegistered { get; private set; }
+
+    /// <summary>False when another application already owns the combination.</summary>
+    public bool DrawModeRegistered { get; private set; }
 
     public void Register()
     {
@@ -41,6 +47,7 @@ public sealed class HotKeyManager : IDisposable
         const uint mod = NativeMethods.MOD_CONTROL | NativeMethods.MOD_SHIFT | NativeMethods.MOD_NOREPEAT;
         ToggleRegistered = NativeMethods.RegisterHotKey(_source.Handle, ToggleHotKeyId, mod, VkL);
         ClearRegistered = NativeMethods.RegisterHotKey(_source.Handle, ClearHotKeyId, mod, VkC);
+        DrawModeRegistered = NativeMethods.RegisterHotKey(_source.Handle, DrawModeHotKeyId, mod, VkD);
     }
 
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
@@ -50,6 +57,7 @@ public sealed class HotKeyManager : IDisposable
         {
             case ToggleHotKeyId: TogglePressed?.Invoke(); handled = true; break;
             case ClearHotKeyId: ClearPressed?.Invoke(); handled = true; break;
+            case DrawModeHotKeyId: DrawModePressed?.Invoke(); handled = true; break;
         }
         return 0;
     }
@@ -59,6 +67,7 @@ public sealed class HotKeyManager : IDisposable
         if (_source is null) return;
         if (ToggleRegistered) NativeMethods.UnregisterHotKey(_source.Handle, ToggleHotKeyId);
         if (ClearRegistered) NativeMethods.UnregisterHotKey(_source.Handle, ClearHotKeyId);
+        if (DrawModeRegistered) NativeMethods.UnregisterHotKey(_source.Handle, DrawModeHotKeyId);
         _source.RemoveHook(WndProc);
         _source.Dispose();
         _source = null;

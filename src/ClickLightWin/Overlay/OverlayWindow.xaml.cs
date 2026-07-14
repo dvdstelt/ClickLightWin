@@ -1,8 +1,12 @@
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using ClickLightWin.Interop;
 using ClickLightWin.Rendering;
+using Brush = System.Windows.Media.Brush;
+using Color = System.Windows.Media.Color;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Point = System.Windows.Point;
 using Screen = System.Windows.Forms.Screen;
 
@@ -20,6 +24,9 @@ public partial class OverlayWindow : Window
     private LaserRenderer? _laser;
     private AnnotationRenderer? _annotations;
     private ShortcutStackRenderer? _shortcuts;
+    private DrawStrokeRenderer? _drawStrokes;
+    private bool _drawing;
+    private nint _hwnd;
 
     public OverlayWindow(Screen screen)
     {
@@ -79,6 +86,81 @@ public partial class OverlayWindow : Window
     /// <summary>Remove all committed annotations on this overlay.</summary>
     public void ClearAnnotations() => _annotations?.Clear();
 
+    /// <summary>
+    /// Enter or leave the frozen drawing mode. In draw mode the overlay stops being
+    /// click-through and captures the mouse to draw persistent freehand strokes; on
+    /// exit, click-through is restored and the strokes are cleared.
+    /// </summary>
+    private static readonly Brush DrawTint = Freeze(Color.FromArgb(0x1A, 0, 0, 0)); // faint frozen dim
+    private static readonly Brush TransparentBrush = Freeze(Color.FromArgb(0, 0, 0, 0));
+
+    public void SetDrawMode(bool on)
+    {
+        if (_drawModeOn == on) return;
+        _drawModeOn = on;
+
+        var ex = (long)NativeMethods.GetWindowLongPtr(_hwnd, NativeMethods.GWL_EXSTYLE);
+        ex = on ? ex & ~NativeMethods.WS_EX_TRANSPARENT   // capture the mouse
+                : ex | NativeMethods.WS_EX_TRANSPARENT;   // click-through again
+        NativeMethods.SetWindowLongPtr(_hwnd, NativeMethods.GWL_EXSTYLE, (nint)ex);
+        NativeMethods.SetWindowPos(_hwnd, 0, 0, 0, 0, 0,
+            NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOZORDER
+            | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_FRAMECHANGED); // flush the style change
+
+        // Both the window and canvas must be hit-testable, and a layered window passes
+        // clicks through fully-transparent pixels regardless of WS_EX_TRANSPARENT, so a
+        // faint tint is needed to actually capture the mouse (it also cues the freeze).
+        IsHitTestVisible = on;
+        PulseCanvas.IsHitTestVisible = on;
+        PulseCanvas.Background = on ? DrawTint : TransparentBrush;
+        DrawModeBorder.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+
+        if (on)
+        {
+            _drawStrokes ??= new DrawStrokeRenderer(PulseCanvas);
+            PulseCanvas.MouseLeftButtonDown += OnDrawDown;
+            PulseCanvas.MouseMove += OnDrawMove;
+            PulseCanvas.MouseLeftButtonUp += OnDrawUp;
+        }
+        else
+        {
+            PulseCanvas.MouseLeftButtonDown -= OnDrawDown;
+            PulseCanvas.MouseMove -= OnDrawMove;
+            PulseCanvas.MouseLeftButtonUp -= OnDrawUp;
+            _drawing = false;
+            _drawStrokes?.Clear(); // strokes live only while the mode is active
+        }
+    }
+
+    private bool _drawModeOn;
+
+    private void OnDrawDown(object sender, MouseButtonEventArgs e)
+    {
+        _drawing = true;
+        PulseCanvas.CaptureMouse();
+        _drawStrokes?.Begin(e.GetPosition(PulseCanvas));
+    }
+
+    private void OnDrawMove(object sender, MouseEventArgs e)
+    {
+        if (_drawing) _drawStrokes?.Append(e.GetPosition(PulseCanvas));
+    }
+
+    private void OnDrawUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_drawing) return;
+        _drawing = false;
+        PulseCanvas.ReleaseMouseCapture();
+        _drawStrokes?.Complete();
+    }
+
+    private static Brush Freeze(Color c)
+    {
+        var brush = new SolidColorBrush(c);
+        brush.Freeze();
+        return brush;
+    }
+
     /// <summary>Show a shortcut in this monitor's bottom-center stack.</summary>
     public void ShowShortcut(IReadOnlyList<string> keys, Settings settings)
     {
@@ -109,7 +191,7 @@ public partial class OverlayWindow : Window
     {
         base.OnSourceInitialized(e);
 
-        var hwnd = new WindowInteropHelper(this).Handle;
+        var hwnd = _hwnd = new WindowInteropHelper(this).Handle;
 
         // Make the window click-through and hidden from alt-tab / taskbar.
         var ex = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE);

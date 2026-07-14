@@ -16,5 +16,14 @@
     <StackPanel x:Name="ShortcutStack" IsHitTestVisible="False"
                 HorizontalAlignment="Center" VerticalAlignment="Bottom"
                 Margin="0,0,0,64" />
+    <!-- Draw-mode indicator: a border + badge shown while click-through is off. -->
+    <Border x:Name="DrawModeBorder" IsHitTestVisible="False" Visibility="Collapsed"
+            BorderBrush="#FF2905" BorderThickness="3" Background="Transparent">
+      <Border VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,10,0,0"
+              Background="#E6202124" CornerRadius="8" Padding="14,7">
+        <TextBlock Text="Drawing — Ctrl+Shift+D to exit" Foreground="White"
+                   FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="13" FontWeight="SemiBold" />
+      </Border>
+    </Border>
   </Grid>
 </Window>

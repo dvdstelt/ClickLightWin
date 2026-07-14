@@ -57,9 +57,10 @@ public sealed class AppController : IDisposable
         // One overlay per monitor; rebuilds itself on display changes.
         _overlays = new OverlayManager(_settings);
 
-        // Global hotkeys (Ctrl+Shift+L toggle, Ctrl+Shift+C clear). Fire on the UI thread.
+        // Global hotkeys (Ctrl+Shift+L toggle, Ctrl+Shift+C clear, Ctrl+Shift+D draw mode).
         _hotKeys.TogglePressed += ToggleEnabled;
         _hotKeys.ClearPressed += ClearAnnotations;
+        _hotKeys.DrawModePressed += ToggleDrawMode;
         _hotKeys.Register();
         WarnAboutUnavailableHotkeys();
 
@@ -94,6 +95,7 @@ public sealed class AppController : IDisposable
         var taken = new List<string>();
         if (!_hotKeys.ToggleRegistered) taken.Add("Ctrl+Shift+L (toggle)");
         if (!_hotKeys.ClearRegistered) taken.Add("Ctrl+Shift+C (clear annotations)");
+        if (!_hotKeys.DrawModeRegistered) taken.Add("Ctrl+Shift+D (drawing mode)");
         if (taken.Count == 0) return;
         _tray?.ShowWarning("ClickLight hotkey unavailable",
             $"Another app already uses {string.Join(" and ", taken)}. That shortcut won't work while it does.");
@@ -103,6 +105,17 @@ public sealed class AppController : IDisposable
     private void OnAnnotation(AnnotationEvent evt) => _overlays?.DispatchAnnotation(evt);
 
     public void ClearAnnotations() => _overlays?.ClearAnnotations();
+
+    // Ctrl+Shift+D: a frozen drawing mode. The overlay stops being click-through so
+    // it captures the mouse for freehand strokes; the screen is "frozen" for apps
+    // until toggled off. Resets to off each launch (runtime state, not persisted).
+    private bool _drawMode;
+
+    private void ToggleDrawMode()
+    {
+        _drawMode = !_drawMode;
+        _overlays?.SetDrawMode(_drawMode);
+    }
 
     // When each button went down, to measure hold time for the release ring.
     private readonly Dictionary<ClickButton, long> _pressTicks = new();
