@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Windows.Forms; // NotifyIcon, ContextMenuStrip
+using ClickLightWin.Interop;
 
 namespace ClickLightWin.Tray;
 
@@ -83,8 +84,12 @@ public sealed class TrayIcon : IDisposable
         // screen, so this stays correct for other taskbar positions too.
         _icon.MouseUp += (_, e) =>
         {
-            if (e.Button == MouseButtons.Right)
-                menu.Show(Cursor.Position, ToolStripDropDownDirection.AboveLeft);
+            if (e.Button != MouseButtons.Right) return;
+            // Give our process the foreground first; without it a hand-shown tray
+            // menu won't dismiss when you click elsewhere (you'd be stuck picking an
+            // item to close it). See NativeMethods.SetForegroundWindow.
+            NativeMethods.SetForegroundWindow(menu.Handle);
+            menu.Show(Cursor.Position, ToolStripDropDownDirection.AboveLeft);
         };
     }
 

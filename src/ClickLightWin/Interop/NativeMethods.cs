@@ -89,6 +89,15 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool DestroyIcon(nint hIcon);
 
+    // ---- Foreground activation -----------------------------------------------
+
+    // A tray context menu shown by hand never gets foreground activation, so a
+    // click outside it fails to dismiss it. Forcing our process to the foreground
+    // first restores the normal click-away close (the classic Win32 tray fix).
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetForegroundWindow(nint hWnd);
+
     // ---- Global hotkeys ------------------------------------------------------
 
     public const int WM_HOTKEY = 0x0312;
