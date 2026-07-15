@@ -120,22 +120,88 @@
       </Setter>
     </Style>
 
-    <!--Color dropdown -->
+    <!-- Dark ComboBox: box + chevron toggle, dark popup with highlighted items -->
+    <ControlTemplate x:Key="ComboToggle" TargetType="ToggleButton">
+      <Border x:Name="bd" Background="{StaticResource Segment}" BorderBrush="{StaticResource SegmentBorder}"
+              BorderThickness="1" CornerRadius="7">
+        <TextBlock Text="&#xE70D;" FontFamily="{StaticResource Icons}" FontSize="11" Foreground="{StaticResource Muted}"
+                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
+      </Border>
+      <ControlTemplate.Triggers>
+        <Trigger Property="IsMouseOver" Value="True">
+          <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}" />
+        </Trigger>
+      </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+    <Style x:Key="DarkComboItem" TargetType="ComboBoxItem">
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ComboBoxItem">
+            <Border x:Name="bd" Background="Transparent" Padding="{TemplateBinding Padding}">
+              <ContentPresenter />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsHighlighted" Value="True">
+                <Setter TargetName="bd" Property="Background" Value="{StaticResource Accent}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="DarkCombo" TargetType="ComboBox">
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Height" Value="34" />
+      <Setter Property="ItemContainerStyle" Value="{StaticResource DarkComboItem}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ComboBox">
+            <Grid>
+              <ToggleButton Focusable="False" ClickMode="Press" Template="{StaticResource ComboToggle}"
+                            IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+              <ContentPresenter IsHitTestVisible="False" Margin="10,0,28,0"
+                                VerticalAlignment="Center" HorizontalAlignment="Left"
+                                Content="{TemplateBinding SelectionBoxItem}"
+                                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" />
+              <Popup x:Name="PART_Popup" Placement="Bottom" AllowsTransparency="True" Focusable="False"
+                     IsOpen="{TemplateBinding IsDropDownOpen}" PopupAnimation="Slide">
+                <Border Background="#2A2A31" BorderBrush="{StaticResource SegmentBorder}" BorderThickness="1"
+                        CornerRadius="7" Margin="0,4,0,0" MinWidth="{TemplateBinding ActualWidth}" SnapsToDevicePixels="True">
+                  <ScrollViewer MaxHeight="280">
+                    <ItemsPresenter />
+                  </ScrollViewer>
+                </Border>
+              </Popup>
+            </Grid>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- Color dropdown -->
     <DataTemplate x:Key="ColorItem">
       <StackPanel Orientation="Horizontal">
         <Border Width="16" Height="16" CornerRadius="4" Background="{Binding Brush}"
                 BorderBrush="{StaticResource SegmentBorder}" BorderThickness="1" VerticalAlignment="Center" />
-        <TextBlock Text="{Binding Name}" Foreground="#1F1F1F" Margin="8,0,0,0" VerticalAlignment="Center" />
+        <TextBlock Text="{Binding Name}" Foreground="{StaticResource Text}" Margin="8,0,0,0" VerticalAlignment="Center" />
       </StackPanel>
     </DataTemplate>
-    <Style x:Key="ColorCombo" TargetType="ComboBox">
+    <Style x:Key="ColorCombo" TargetType="ComboBox" BasedOn="{StaticResource DarkCombo}">
       <Setter Property="ItemsSource" Value="{x:Static local:Palette.Colors}" />
       <Setter Property="SelectedValuePath" Value="Hex" />
       <Setter Property="ItemTemplate" Value="{StaticResource ColorItem}" />
-      <Setter Property="Width" Value="140" />
-      <Setter Property="Padding" Value="8,4" />
-      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Width" Value="150" />
     </Style>
+
+    <!-- Profile name row (explicit template so the dark combo shows the name, not ToString) -->
+    <DataTemplate x:Key="ProfileItem">
+      <TextBlock Text="{Binding Name}" Foreground="{StaticResource Text}" VerticalAlignment="Center" />
+    </DataTemplate>
 
     <!--Reset glyph button -->
     <Style x:Key="ResetButton" TargetType="Button">
@@ -563,8 +629,8 @@
               <TextBlock Text="Switch profiles to load a saved look. Changes preview here and apply on OK." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
               <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                <ComboBox x:Name="ProfileCombo" Grid.Column="0" DisplayMemberPath="Name" Padding="8,5"
-                          Cursor="Hand" VerticalContentAlignment="Center" SelectionChanged="OnProfileSelected" />
+                <ComboBox x:Name="ProfileCombo" Grid.Column="0" ItemTemplate="{StaticResource ProfileItem}"
+                          Style="{StaticResource DarkCombo}" SelectionChanged="OnProfileSelected" />
                 <Button x:Name="SaveChangesButton" Grid.Column="1" Content="Save changes" Style="{StaticResource OutlineButton}"
                         Margin="10,0,0,0" Click="OnSaveChanges" />
                 <Button x:Name="DeleteProfileButton" Grid.Column="2" Content="Delete" Style="{StaticResource DangerButton}"
