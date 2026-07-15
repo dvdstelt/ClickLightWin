@@ -21,6 +21,7 @@ public sealed class AppController : IDisposable
     private readonly HotKeyManager _hotKeys = new();
     private readonly SettingsStore _settingsStore = new();
     private readonly LaunchAtLoginController _launchAtLogin = new();
+    private readonly ProfileStore _profileStore = new();
     private readonly UpdateService _updates = new();
     private Settings _settings = new();
     private TrayIcon? _tray;
@@ -232,7 +233,7 @@ public sealed class AppController : IDisposable
         // Edit a detached draft; the live settings (and overlays) are untouched until
         // the user commits with OK. Cancel just discards the draft.
         var draft = _settings.Clone();
-        var window = _settingsWindow = new SettingsWindow(draft);
+        var window = _settingsWindow = new SettingsWindow(draft, _profileStore);
         _settingsWindow.Closed += (_, _) =>
         {
             _settingsWindow = null;

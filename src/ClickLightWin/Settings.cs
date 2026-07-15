@@ -33,6 +33,7 @@ public sealed class Settings : INotifyPropertyChanged
     private HotKeyBinding _toggleHotKey = HotKeyBinding.DefaultToggle;
     private HotKeyBinding _clearHotKey = HotKeyBinding.DefaultClear;
     private HotKeyBinding _drawModeHotKey = HotKeyBinding.DefaultDrawMode;
+    private string _currentProfileName = ProfileStore.DefaultProfileName;
 
     // ---- Persisted, user-editable -------------------------------------------
 
@@ -54,6 +55,9 @@ public sealed class Settings : INotifyPropertyChanged
     public HotKeyBinding ToggleHotKey { get => _toggleHotKey; set => Set(ref _toggleHotKey, value); }
     public HotKeyBinding ClearHotKey { get => _clearHotKey; set => Set(ref _clearHotKey, value); }
     public HotKeyBinding DrawModeHotKey { get => _drawModeHotKey; set => Set(ref _drawModeHotKey, value); }
+
+    /// <summary>Name of the profile currently selected in the settings window.</summary>
+    public string CurrentProfileName { get => _currentProfileName; set => Set(ref _currentProfileName, value); }
 
     // ---- Computed render constants (not persisted, not user-editable yet) ----
 
@@ -137,6 +141,7 @@ public sealed class Settings : INotifyPropertyChanged
         ToggleHotKey = other.ToggleHotKey;
         ClearHotKey = other.ClearHotKey;
         DrawModeHotKey = other.DrawModeHotKey;
+        CurrentProfileName = other.CurrentProfileName;
     }
 
     public Color ColorFor(ClickButton button) => ParseHex(button switch

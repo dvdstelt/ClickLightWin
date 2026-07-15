@@ -189,6 +189,17 @@
       <Setter Property="Foreground" Value="#F87171" />
     </Style>
 
+    <!-- Dark single-line text input -->
+    <Style x:Key="InputBox" TargetType="TextBox">
+      <Setter Property="Background" Value="{StaticResource Segment}" />
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="CaretBrush" Value="{StaticResource Text}" />
+      <Setter Property="BorderBrush" Value="{StaticResource SegmentBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="9,7" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
     <Style x:Key="AccentButton" TargetType="Button">
       <Setter Property="Foreground" Value="White" />
       <Setter Property="Cursor" Value="Hand" />
@@ -541,13 +552,51 @@
           </Border>
         </StackPanel>
 
-        <!-- ===== Profiles (placeholder) ===== -->
+        <!-- ===== Profiles ===== -->
         <StackPanel x:Name="PaneProfiles" Visibility="Collapsed">
           <TextBlock Text="Profiles" Style="{StaticResource PaneTitle}" />
-          <TextBlock Text="Save and reuse visual setups." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
+          <TextBlock Text="Save and reuse visual setups. Profiles do not include shortcuts." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
+
           <Border Style="{StaticResource CardBox}">
-            <TextBlock Text="Coming soon." Style="{StaticResource RowSub}" />
+            <StackPanel>
+              <TextBlock Text="Current Profile" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Switch profiles to load a saved look. Changes preview here and apply on OK." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <ComboBox x:Name="ProfileCombo" Grid.Column="0" DisplayMemberPath="Name" Padding="8,5"
+                          Cursor="Hand" VerticalContentAlignment="Center" SelectionChanged="OnProfileSelected" />
+                <Button x:Name="SaveChangesButton" Grid.Column="1" Content="Save changes" Style="{StaticResource OutlineButton}"
+                        Margin="10,0,0,0" Click="OnSaveChanges" />
+                <Button x:Name="DeleteProfileButton" Grid.Column="2" Content="Delete" Style="{StaticResource DangerButton}"
+                        Margin="8,0,0,0" Click="OnDeleteProfile" />
+              </Grid>
+            </StackPanel>
           </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="New Profile" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Save the current look as a new profile." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBox x:Name="NewProfileName" Grid.Column="0" Style="{StaticResource InputBox}" Margin="0,0,10,0" />
+                <Button Grid.Column="1" Content="Create" Style="{StaticResource AccentButton}" Click="OnCreateProfile" />
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Import and Export" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Move profiles between machines as a JSON file." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <StackPanel Orientation="Horizontal">
+                <Button Content="Export..." Style="{StaticResource OutlineButton}" Click="OnExportProfiles" Margin="0,0,10,0" />
+                <Button Content="Import..." Style="{StaticResource OutlineButton}" Click="OnImportProfiles" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <TextBlock x:Name="ProfileStatus" Style="{StaticResource RowSub}" Visibility="Collapsed" />
         </StackPanel>
 
         <!-- ===== Activity (placeholder) ===== -->
