@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
@@ -58,6 +59,9 @@ public sealed class Settings : INotifyPropertyChanged
 
     /// <summary>Name of the profile currently selected in the settings window.</summary>
     public string CurrentProfileName { get => _currentProfileName; set => Set(ref _currentProfileName, value); }
+
+    /// <summary>Order and visibility of the system-tray menu items (Quit always shown).</summary>
+    public ObservableCollection<MenuLayoutEntry> MenuLayout { get; set; } = TrayMenu.DefaultLayout();
 
     // ---- Computed render constants (not persisted, not user-editable yet) ----
 
@@ -142,6 +146,11 @@ public sealed class Settings : INotifyPropertyChanged
         ClearHotKey = other.ClearHotKey;
         DrawModeHotKey = other.DrawModeHotKey;
         CurrentProfileName = other.CurrentProfileName;
+
+        // Deep-copy the menu layout into this instance's own collection (kept, not
+        // replaced, so any UI bound to it stays live).
+        MenuLayout.Clear();
+        foreach (var entry in other.MenuLayout) MenuLayout.Add(entry.Clone());
     }
 
     public Color ColorFor(ClickButton button) => ParseHex(button switch

@@ -1,10 +1,15 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using Brush = System.Windows.Media.Brush;
+using DragDropEffects = System.Windows.DragDropEffects;
+using DragEventArgs = System.Windows.DragEventArgs;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using MessageBox = System.Windows.MessageBox;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using Point = System.Windows.Point;
 using VerticalAlignment = System.Windows.VerticalAlignment;
 
 namespace ClickLightWin.Views;
@@ -22,6 +27,8 @@ public partial class SettingsWindow : Window
     private readonly ProfileStore _profiles;
     private readonly ActivityStore _activity;
     private bool _suppressProfileLoad;
+    private Point _menuDragStart;
+    private MenuLayoutEntry? _menuDragItem;
 
     /// <summary>True when the user closed with OK; the caller then applies the draft.</summary>
     public bool Committed { get; private set; }
@@ -272,6 +279,36 @@ public partial class SettingsWindow : Window
         PopulateActivity();
         ActivityStatus.Text = "Activity history cleared.";
         ActivityStatus.Visibility = Visibility.Visible;
+    }
+
+    // ---- Menu Layout drag-to-reorder ----
+
+    private void OnMenuItemPreviewDown(object sender, MouseButtonEventArgs e)
+    {
+        _menuDragStart = e.GetPosition(null);
+        _menuDragItem = (e.OriginalSource as FrameworkElement)?.DataContext as MenuLayoutEntry;
+    }
+
+    private void OnMenuItemPreviewMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || _menuDragItem is null) return;
+        var pos = e.GetPosition(null);
+        // Only begin a drag once past the system threshold, so a plain click still
+        // toggles the checkbox instead of starting a reorder.
+        if (Math.Abs(pos.X - _menuDragStart.X) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(pos.Y - _menuDragStart.Y) < SystemParameters.MinimumVerticalDragDistance) return;
+        DragDrop.DoDragDrop(MenuList, _menuDragItem, DragDropEffects.Move);
+        _menuDragItem = null;
+    }
+
+    private void OnMenuItemDrop(object sender, DragEventArgs e)
+    {
+        if (_menuDragItem is null || DataContext is not Settings s) return;
+        var target = (e.OriginalSource as FrameworkElement)?.DataContext as MenuLayoutEntry;
+        var from = s.MenuLayout.IndexOf(_menuDragItem);
+        var to = target is null ? s.MenuLayout.Count - 1 : s.MenuLayout.IndexOf(target);
+        if (from >= 0 && to >= 0 && from != to) s.MenuLayout.Move(from, to);
+        _menuDragItem = null;
     }
 
     // Pick random presets and colors, in the spirit of the macOS "Randomize" button.

@@ -654,12 +654,40 @@
           <TextBlock x:Name="ActivityStatus" Style="{StaticResource RowSub}" Visibility="Collapsed" />
         </StackPanel>
 
-        <!-- ===== Menu Layout (placeholder) ===== -->
+        <!-- ===== Menu Layout ===== -->
         <StackPanel x:Name="PaneMenu" Visibility="Collapsed">
           <TextBlock Text="Menu Layout" Style="{StaticResource PaneTitle}" />
-          <TextBlock Text="Choose which items appear in the tray menu." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
+          <TextBlock Text="Choose which tray-menu items appear and drag to reorder them." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
+
           <Border Style="{StaticResource CardBox}">
-            <TextBlock Text="Coming soon." Style="{StaticResource RowSub}" />
+            <StackPanel>
+              <TextBlock Text="Tray Menu Items" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Turn items off to hide them. Drag the handle to reorder. Quit is always shown." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <ItemsControl x:Name="MenuList" ItemsSource="{Binding MenuLayout}" AllowDrop="True"
+                            PreviewMouseLeftButtonDown="OnMenuItemPreviewDown"
+                            PreviewMouseMove="OnMenuItemPreviewMove"
+                            Drop="OnMenuItemDrop">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border Background="{StaticResource Segment}" BorderBrush="{StaticResource SegmentBorder}"
+                            BorderThickness="1" CornerRadius="7" Padding="10,7" Margin="0,3">
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="&#x2261;" Foreground="{StaticResource Muted}" FontSize="17"
+                                   VerticalAlignment="Center" Margin="0,0,12,0" Cursor="SizeAll" ToolTip="Drag to reorder" />
+                        <CheckBox Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding Visible}"
+                                  IsEnabled="{Binding CanHide}" Margin="0,0,14,0" />
+                        <TextBlock Grid.Column="2" Text="{Binding Label}" Style="{StaticResource RowTitle}" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
           </Border>
         </StackPanel>
 
