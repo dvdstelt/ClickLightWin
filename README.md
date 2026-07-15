@@ -22,6 +22,9 @@ app runs headless apart from a tray icon; there is no main window.
 - A modern settings window and a dark tray menu (feature toggles, preset submenus)
 - Global toggle hotkey **Ctrl+Shift+L**, launch-at-login, single-instance guard
 - Settings persisted to `%APPDATA%\ClickLightWin\settings.json`
+- **Auto-update** (installer build only): checks GitHub Releases in the background
+  and, when a newer version is out, shows a "Restart to update" prompt in the tray.
+  Nothing installs until you click it; the portable exe updates manually.
 
 See [docs/04-build-checklist.md](docs/04-build-checklist.md) for the roadmap this was built against.
 

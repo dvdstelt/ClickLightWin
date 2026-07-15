@@ -17,10 +17,13 @@ public sealed class TrayIcon : IDisposable
     private readonly Icon _iconImage;
     private readonly ContextMenuStrip _menu;
     private readonly Font _menuFont;
+    private readonly Font _updateFont;
     private readonly Settings _settings;
     private readonly LaunchAtLoginController _launchAtLogin;
     private readonly Action _persist;
 
+    private readonly ToolStripMenuItem _updateItem;
+    private readonly ToolStripSeparator _updateSeparator;
     private readonly ToolStripMenuItem _enabledItem;
     private readonly ToolStripMenuItem _laserItem;
     private readonly ToolStripMenuItem _releaseItem;
@@ -31,7 +34,8 @@ public sealed class TrayIcon : IDisposable
     private readonly List<(ToolStripMenuItem Item, double Value)> _durationItems = [];
 
     public TrayIcon(Settings settings, LaunchAtLoginController launchAtLogin,
-                    Action persist, Action openSettings, Action clearAnnotations, Action quit)
+                    Action persist, Action openSettings, Action clearAnnotations,
+                    Action applyUpdate, Action quit)
     {
         _settings = settings;
         _launchAtLogin = launchAtLogin;
@@ -46,6 +50,13 @@ public sealed class TrayIcon : IDisposable
         };
         menu.Opening += (_, _) => RefreshChecks();
 
+        // Hidden until an update is found, then shown at the very top as a prompt.
+        _updateFont = new Font(_menuFont, FontStyle.Bold);
+        _updateItem = Item("Restart to update", applyUpdate);
+        _updateItem.Font = _updateFont;
+        _updateItem.Visible = false;
+        _updateSeparator = new ToolStripSeparator { Visible = false };
+
         _enabledItem = Check("Enabled", () => Toggle(s => s.Enabled = !s.Enabled));
         _laserItem = Check("Laser pointer mode", () => Toggle(s => s.ShowLaserPointer = !s.ShowLaserPointer));
         _releaseItem = Check("Show release ring", () => Toggle(s => s.ShowRelease = !s.ShowRelease));
@@ -53,6 +64,8 @@ public sealed class TrayIcon : IDisposable
         _shortcutsItem = Check("Show keyboard shortcuts", () => Toggle(s => s.ShowShortcuts = !s.ShowShortcuts));
         _launchItem = Check("Launch at login", () => _launchAtLogin.SetEnabled(!_launchAtLogin.IsEnabled));
 
+        menu.Items.Add(_updateItem);
+        menu.Items.Add(_updateSeparator);
         menu.Items.Add(_enabledItem);
         menu.Items.Add(_laserItem);
         menu.Items.Add(new ToolStripSeparator());
@@ -130,6 +143,23 @@ public sealed class TrayIcon : IDisposable
     public void ShowWarning(string title, string text) =>
         _icon.ShowBalloonTip(5000, title, text, ToolTipIcon.Warning);
 
+    /// <summary>Show a transient informational balloon from the tray icon.</summary>
+    public void ShowInfo(string title, string text) =>
+        _icon.ShowBalloonTip(5000, title, text, ToolTipIcon.Info);
+
+    /// <summary>
+    /// Reveal the "Restart to update" prompt (top of the menu) and nudge the user
+    /// with a balloon. Clicking the item runs the applyUpdate callback.
+    /// </summary>
+    public void ShowUpdateAvailable(string version)
+    {
+        _updateItem.Text = $"Restart to update to v{version}";
+        _updateItem.Visible = true;
+        _updateSeparator.Visible = true;
+        ShowInfo("ClickLight update available",
+            $"Version {version} is ready. Right-click the tray icon and choose \"Restart to update\".");
+    }
+
     private void Toggle(Action<Settings> mutate)
     {
         mutate(_settings);
@@ -164,5 +194,6 @@ public sealed class TrayIcon : IDisposable
         _iconImage.Dispose();
         _menu.Dispose(); // NotifyIcon does not own its ContextMenuStrip
         _menuFont.Dispose();
+        _updateFont.Dispose();
     }
 }

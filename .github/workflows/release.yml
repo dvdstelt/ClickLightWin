@@ -1,10 +1,11 @@
 name: Release
 
 # Push a tag like v1.2.3 to build the downloads and publish a GitHub Release.
-# Three assets are produced:
+# Assets produced:
 #   * ClickLight-vX.Y.Z-win-x64.exe   - small framework-dependent app (needs .NET 10 installed)
 #   * ClickLight-vX.Y.Z-win-arm64.exe - the same for Windows-on-Arm machines
 #   * ClickLight-vX.Y.Z-Setup.exe     - x64 installer that also installs .NET 10 if it is missing
+#   * *.nupkg + releases.*.json       - Velopack update feed the in-app updater reads
 #
 # Code signing (SignPath, free for open-source) is applied automatically once the
 # repository is configured for it. The signing steps are skipped until then, so an
@@ -89,10 +90,21 @@ jobs:
           wait-for-completion: true
           output-artifact-directory: assets # overwrites the staged files with signed ones
 
+      # The in-app updater (Velopack GithubSource) reads the channel feed index and
+      # the full .nupkg from the release assets. Stage them AFTER signing so the
+      # SignPath step only ever sees the .exe files (and its overwrite of the assets
+      # directory cannot drop the feed). Keep their original names, which the
+      # updater matches on.
+      - name: Stage Velopack update feed
+        shell: pwsh
+        run: |
+          Copy-Item releases/*.nupkg assets/ -ErrorAction SilentlyContinue
+          Copy-Item releases/*.json  assets/ -ErrorAction SilentlyContinue
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: assets/*.exe
+          files: assets/*             # exes + Velopack feed (.nupkg, releases.*.json)
           body_path: RELEASE_NOTES.md    # curated intro, prepended...
           generate_release_notes: true   # ...then the auto per-version changelog
           fail_on_unmatched_files: true
