@@ -1,5 +1,7 @@
+using System.Windows.Threading;
 using ClickLightWin.Overlay;
 using ClickLightWin.Tray;
+using ClickLightWin.Update;
 using ClickLightWin.Views;
 using Application = System.Windows.Application;
 
@@ -19,10 +21,12 @@ public sealed class AppController : IDisposable
     private readonly HotKeyManager _hotKeys = new();
     private readonly SettingsStore _settingsStore = new();
     private readonly LaunchAtLoginController _launchAtLogin = new();
+    private readonly UpdateService _updates = new();
     private Settings _settings = new();
     private TrayIcon? _tray;
     private OverlayManager? _overlays;
     private SettingsWindow? _settingsWindow;
+    private DispatcherTimer? _updateTimer;
 
     public void Start()
     {
@@ -48,6 +52,7 @@ public sealed class AppController : IDisposable
             persist: () => _settingsStore.Save(_settings),
             openSettings: ShowSettings,
             clearAnnotations: ClearAnnotations,
+            applyUpdate: () => _ = ApplyUpdateAsync(),
             quit: () => Application.Current.Shutdown());
 
         // One overlay per monitor; rebuilds itself on display changes.
@@ -67,6 +72,48 @@ public sealed class AppController : IDisposable
         _hook.Install();
 
         UpdateKeyboardHook(); // installs the keyboard hook only if the shortcut display is on
+
+        InitializeUpdates();
+    }
+
+    // Auto-check for a newer release on startup and every few hours. Only the
+    // installed (Setup.exe) build is Velopack-managed, so this quietly no-ops for
+    // the portable exe and `dotnet run`. Updates are never applied silently: a
+    // found update only reveals the "Restart to update" tray prompt.
+    private void InitializeUpdates()
+    {
+        if (!_updates.IsSupported) return;
+        _updateTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
+        _updateTimer.Tick += (_, _) => _ = CheckForUpdatesAsync();
+        _updateTimer.Start();
+        _ = CheckForUpdatesAsync();
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            var version = await _updates.CheckAsync();
+            if (version is not null) _tray?.ShowUpdateAvailable(version);
+        }
+        catch
+        {
+            // A failed check (offline, GitHub hiccup) is not worth bothering the
+            // user about; the next scheduled check will try again.
+        }
+    }
+
+    private async Task ApplyUpdateAsync()
+    {
+        try
+        {
+            _tray?.ShowInfo("ClickLight", "Downloading the update. The app will restart when it is ready.");
+            await _updates.DownloadAndRestartAsync(); // does not return on success
+        }
+        catch
+        {
+            _tray?.ShowWarning("Update failed", "The update could not be downloaded. Please try again later.");
+        }
     }
 
     // Privacy: the keyboard hook only runs while the shortcut display is enabled
@@ -187,6 +234,7 @@ public sealed class AppController : IDisposable
     public void Dispose()
     {
         _settingsStore.Save(_settings);
+        _updateTimer?.Stop();
         _hook.Dispose();
         _keyboardHook.Dispose();
         _hotKeys.Dispose();
