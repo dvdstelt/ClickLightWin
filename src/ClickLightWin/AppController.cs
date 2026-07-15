@@ -27,18 +27,14 @@ public sealed class AppController : IDisposable
     public void Start()
     {
         _settings = _settingsStore.Load();
-        _hook.EmitMoves = LaserActive; // only track the move stream when the laser needs it
-        _hook.LaserStrokeEnabled = LaserActive;
+        _hook.EmitMoves = LaserActive; // only track the move stream when the laser glow needs it
         _hook.AnnotationsEnabled = AnnotationsActive;
-        // React to settings changes: the glow move stream and the Ctrl+drag laser
-        // stroke follow the laser (and Enabled); annotations follow their own toggle.
+        // React to settings changes: the glow move stream follows the laser (and
+        // Enabled); annotations follow their own toggle.
         _settings.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.ShowLaserPointer))
-            {
                 _hook.EmitMoves = LaserActive;
-                _hook.LaserStrokeEnabled = LaserActive;
-            }
             if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.EnableAnnotations))
                 _hook.AnnotationsEnabled = AnnotationsActive;
             if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.ShowShortcuts))
@@ -57,12 +53,12 @@ public sealed class AppController : IDisposable
         // One overlay per monitor; rebuilds itself on display changes.
         _overlays = new OverlayManager(_settings);
 
-        // Global hotkeys (Ctrl+Shift+L toggle, Ctrl+Shift+C clear, Ctrl+Shift+D draw mode).
+        // Global hotkeys (defaults Ctrl+Shift+L/C/D; user-configurable in settings).
         _hotKeys.TogglePressed += ToggleEnabled;
         _hotKeys.ClearPressed += ClearAnnotations;
         _hotKeys.DrawModePressed += ToggleDrawMode;
-        _hotKeys.Register();
-        WarnAboutUnavailableHotkeys();
+        _hotKeys.Start();
+        ConfigureHotkeys();
 
         // Install the system-wide mouse hook on the UI thread so the callback fires
         // here and can touch the overlays without cross-thread marshaling.
@@ -88,17 +84,23 @@ public sealed class AppController : IDisposable
     // The laser features (glow move stream, Ctrl+drag stroke) run only while the laser is on.
     private bool LaserActive => _settings.Enabled && _settings.ShowLaserPointer;
 
-    // If another app owns a hotkey, RegisterHotKey fails silently; tell the user
-    // once so a dead shortcut is not mistaken for a ClickLight bug.
+    private void ConfigureHotkeys()
+    {
+        _hotKeys.Configure(_settings.ToggleHotKey, _settings.ClearHotKey, _settings.DrawModeHotKey);
+        WarnAboutUnavailableHotkeys();
+    }
+
+    // If a binding is invalid or another app owns it, RegisterHotKey fails silently;
+    // tell the user once so a dead shortcut is not mistaken for a ClickLight bug.
     private void WarnAboutUnavailableHotkeys()
     {
         var taken = new List<string>();
-        if (!_hotKeys.ToggleRegistered) taken.Add("Ctrl+Shift+L (toggle)");
-        if (!_hotKeys.ClearRegistered) taken.Add("Ctrl+Shift+C (clear annotations)");
-        if (!_hotKeys.DrawModeRegistered) taken.Add("Ctrl+Shift+D (drawing mode)");
+        if (!_hotKeys.ToggleRegistered) taken.Add($"{_settings.ToggleHotKey.Display} (toggle)");
+        if (!_hotKeys.ClearRegistered) taken.Add($"{_settings.ClearHotKey.Display} (clear annotations)");
+        if (!_hotKeys.DrawModeRegistered) taken.Add($"{_settings.DrawModeHotKey.Display} (drawing mode)");
         if (taken.Count == 0) return;
-        _tray?.ShowWarning("ClickLight hotkey unavailable",
-            $"Another app already uses {string.Join(" and ", taken)}. That shortcut won't work while it does.");
+        _tray?.ShowWarning("ClickLight shortcut unavailable",
+            $"{string.Join(" and ", taken)} could not be registered (already in use or invalid).");
     }
 
     // Left-drag draws an arrow, right-drag a box; the hook tags each with its tool.
@@ -167,10 +169,15 @@ public sealed class AppController : IDisposable
             return;
         }
 
+        // Suspend the global hotkeys while configuring, so pressing a combo in the
+        // shortcut recorder neither fires an action nor collides with the OS registration.
+        _hotKeys.Suspend();
+
         _settingsWindow = new SettingsWindow(_settings);
         _settingsWindow.Closed += (_, _) =>
         {
             _settingsWindow = null;
+            ConfigureHotkeys(); // apply any rebindings and re-enable the hotkeys
             _settingsStore.Save(_settings); // persist any edits made in the window
         };
         _settingsWindow.Show();

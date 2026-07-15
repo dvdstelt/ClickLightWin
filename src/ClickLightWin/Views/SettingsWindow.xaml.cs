@@ -16,4 +16,15 @@ public partial class SettingsWindow : Window
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
+
+    private void OnResetShortcut(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not Settings settings || sender is not FrameworkElement { Tag: string which }) return;
+        switch (which)
+        {
+            case "toggle": settings.ToggleHotKey = HotKeyBinding.DefaultToggle; break;
+            case "clear": settings.ClearHotKey = HotKeyBinding.DefaultClear; break;
+            case "draw": settings.DrawModeHotKey = HotKeyBinding.DefaultDrawMode; break;
+        }
+    }
 }

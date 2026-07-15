@@ -4,37 +4,33 @@ using ClickLightWin.Interop;
 namespace ClickLightWin;
 
 /// <summary>
-/// Registers the system-wide hotkeys on a message-only window: Ctrl+Shift+L to
-/// toggle ClickLight and Ctrl+Shift+C to clear annotations. The Windows analogue
-/// of HotKeyManager.swift, which uses Carbon RegisterEventHotKey on macOS.
+/// Registers the configurable global hotkeys (toggle, clear annotations, drawing
+/// mode) on a message-only window and raises an event when one fires. Bindings can
+/// be reconfigured at runtime, and suspended while the settings window is open so
+/// they neither fire nor collide with the shortcut recorder. Maps to HotKeyManager.swift.
 /// </summary>
 public sealed class HotKeyManager : IDisposable
 {
     private const int ToggleHotKeyId = 1;
     private const int ClearHotKeyId = 2;
     private const int DrawModeHotKeyId = 3;
-    private const uint VkL = 0x4C; // 'L'
-    private const uint VkC = 0x43; // 'C'
-    private const uint VkD = 0x44; // 'D'
 
     private HwndSource? _source;
+    private HotKeyBinding? _toggle, _clear, _drawMode;
 
     public event Action? TogglePressed;
     public event Action? ClearPressed;
     public event Action? DrawModePressed;
 
-    /// <summary>False when another application already owns the combination.</summary>
+    /// <summary>False when the binding is invalid or another application already owns it.</summary>
     public bool ToggleRegistered { get; private set; }
-
-    /// <summary>False when another application already owns the combination.</summary>
     public bool ClearRegistered { get; private set; }
-
-    /// <summary>False when another application already owns the combination.</summary>
     public bool DrawModeRegistered { get; private set; }
 
-    public void Register()
+    /// <summary>Create the message-only window that receives WM_HOTKEY.</summary>
+    public void Start()
     {
-        // A message-only window receives WM_HOTKEY without a visible or taskbar window.
+        if (_source is not null) return;
         var parameters = new HwndSourceParameters("ClickLightWinHotKeyWindow")
         {
             Width = 0,
@@ -43,11 +39,40 @@ public sealed class HotKeyManager : IDisposable
         };
         _source = new HwndSource(parameters);
         _source.AddHook(WndProc);
+    }
 
-        const uint mod = NativeMethods.MOD_CONTROL | NativeMethods.MOD_SHIFT | NativeMethods.MOD_NOREPEAT;
-        ToggleRegistered = NativeMethods.RegisterHotKey(_source.Handle, ToggleHotKeyId, mod, VkL);
-        ClearRegistered = NativeMethods.RegisterHotKey(_source.Handle, ClearHotKeyId, mod, VkC);
-        DrawModeRegistered = NativeMethods.RegisterHotKey(_source.Handle, DrawModeHotKeyId, mod, VkD);
+    /// <summary>Apply a new set of bindings and (re)register them.</summary>
+    public void Configure(HotKeyBinding toggle, HotKeyBinding clear, HotKeyBinding drawMode)
+    {
+        _toggle = toggle;
+        _clear = clear;
+        _drawMode = drawMode;
+        Reregister();
+    }
+
+    /// <summary>Unregister everything (e.g. while the settings window records a new combo).</summary>
+    public void Suspend() => UnregisterAll();
+
+    private void Reregister()
+    {
+        UnregisterAll();
+        if (_source is null) return;
+        ToggleRegistered = TryRegister(ToggleHotKeyId, _toggle);
+        ClearRegistered = TryRegister(ClearHotKeyId, _clear);
+        DrawModeRegistered = TryRegister(DrawModeHotKeyId, _drawMode);
+    }
+
+    private bool TryRegister(int id, HotKeyBinding? binding) =>
+        binding is { IsValid: true }
+        && NativeMethods.RegisterHotKey(_source!.Handle, id, binding.Win32Modifiers, binding.VirtualKey);
+
+    private void UnregisterAll()
+    {
+        if (_source is null) return;
+        NativeMethods.UnregisterHotKey(_source.Handle, ToggleHotKeyId);
+        NativeMethods.UnregisterHotKey(_source.Handle, ClearHotKeyId);
+        NativeMethods.UnregisterHotKey(_source.Handle, DrawModeHotKeyId);
+        ToggleRegistered = ClearRegistered = DrawModeRegistered = false;
     }
 
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
@@ -65,9 +90,7 @@ public sealed class HotKeyManager : IDisposable
     public void Dispose()
     {
         if (_source is null) return;
-        if (ToggleRegistered) NativeMethods.UnregisterHotKey(_source.Handle, ToggleHotKeyId);
-        if (ClearRegistered) NativeMethods.UnregisterHotKey(_source.Handle, ClearHotKeyId);
-        if (DrawModeRegistered) NativeMethods.UnregisterHotKey(_source.Handle, DrawModeHotKeyId);
+        UnregisterAll();
         _source.RemoveHook(WndProc);
         _source.Dispose();
         _source = null;
