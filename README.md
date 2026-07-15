@@ -44,40 +44,6 @@ Grab the latest from the [Releases](../../releases) page. Two options:
 Until code signing is set up (see below), both are unsigned, so on first launch Windows
 SmartScreen may say "Windows protected your PC" — click **More info -> Run anyway**.
 
-## Code signing
-
-The release workflow signs both downloads with [SignPath](https://signpath.io) (free for
-open-source projects), which removes the "Unknown publisher" warning. The signing steps
-stay dormant until the repository is configured, so releases still build unsigned in the
-meantime. To enable it:
-
-1. Create a free SignPath account and connect this GitHub repository.
-2. In SignPath, define a **project**, an **artifact configuration** that signs the two
-   `.exe` files, and a **signing policy** (e.g. `release-signing`).
-3. Add a repository **secret** `SIGNPATH_API_TOKEN`, and repository **variables**
-   `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG`, `SIGNPATH_SIGNING_POLICY_SLUG`,
-   and `SIGNPATH_ARTIFACT_CONFIG_SLUG`.
-4. Push a new tag — the release assets will be signed automatically.
-
-SignPath's free plan requires an OSS license (this project is MIT) and a public repo.
-
-## Requirements (to build)
-
-- Windows 10 21H2+ or Windows 11
-- [.NET 10 SDK](https://dotnet.microsoft.com/download) (`dotnet --version` shows `10.x`)
-- WPF builds on Windows only
-
-## Build and run
-
-```powershell
-# from the repo root
-dotnet build src\ClickLightWin.sln
-dotnet run --project src\ClickLightWin\ClickLightWin.csproj
-```
-
-The app starts in the tray. Click anywhere to see a pulse. Right-click the tray
-icon for the menu, or press **Ctrl+Shift+L** to toggle highlighting on and off.
-
 ## Known limitations
 
 - **Elevated windows and secure surfaces.** A non-elevated hook cannot observe
@@ -95,19 +61,6 @@ icon for the menu, or press **Ctrl+Shift+L** to toggle highlighting on and off.
 - **Mixed-DPI multi-monitor.** Placement is verified at 100% and 150% on a single
   monitor. Cross-monitor routing and mixed-DPI setups (e.g. a 150% laptop panel
   plus a 100% external) should be verified on that hardware.
-
-## Layout
-
-```
-ClickLightWin/
-├── README.md                 this file
-├── global.json               .NET SDK pin
-├── docs/                      build blueprint and API mapping
-├── ClickLight/                macOS reference clone (git-ignored)
-└── src/
-    ├── ClickLightWin.sln
-    └── ClickLightWin/         the app (WPF + WinForms tray)
-```
 
 The macOS Swift sources under `ClickLight/Sources/ClickLight/` are the source of
 truth for behavior (pulse shapes, timing, presets). The mapping from Swift files
