@@ -1,7 +1,11 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using Brush = System.Windows.Media.Brush;
+using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using MessageBox = System.Windows.MessageBox;
+using VerticalAlignment = System.Windows.VerticalAlignment;
 
 namespace ClickLightWin.Views;
 
@@ -16,20 +20,23 @@ public partial class SettingsWindow : Window
     private readonly StackPanel[] _panes;
     private readonly Random _rng = new();
     private readonly ProfileStore _profiles;
+    private readonly ActivityStore _activity;
     private bool _suppressProfileLoad;
 
     /// <summary>True when the user closed with OK; the caller then applies the draft.</summary>
     public bool Committed { get; private set; }
 
-    public SettingsWindow(Settings settings, ProfileStore profiles)
+    public SettingsWindow(Settings settings, ProfileStore profiles, ActivityStore activity)
     {
         InitializeComponent();
         DataContext = settings;
         _profiles = profiles;
+        _activity = activity;
         ProfileCombo.ItemsSource = profiles.Profiles;
         // Reflect the current profile without reloading it, so any unsaved live tweaks
         // that differ from the profile's snapshot are preserved on open.
         SelectProfileByName(settings.CurrentProfileName);
+        PopulateActivity();
         _panes = [PaneGeneral, PaneEvents, PaneStyle, PaneShortcuts, PaneProfiles, PaneActivity, PaneMenu];
         Nav.SelectedIndex = 0;
     }
@@ -191,6 +198,80 @@ public partial class SettingsWindow : Window
     {
         ProfileStatus.Text = text;
         ProfileStatus.Visibility = Visibility.Visible;
+    }
+
+    // Fill the Activity pane: today's totals plus a 7-day bar chart built by hand.
+    private void PopulateActivity()
+    {
+        var days = _activity.LastSevenDays();
+        var today = days[^1];
+        TodayTotal.Text = today.TotalClicks.ToString();
+        MetricLeft.Text = today.Left.ToString();
+        MetricRight.Text = today.Right.ToString();
+        MetricMiddle.Text = today.Middle.ToString();
+        MetricDrags.Text = today.Drags.ToString();
+
+        var accent = (Brush)FindResource("Accent");
+        var muted = (Brush)FindResource("Muted");
+
+        ActivityChart.Children.Clear();
+        var max = Math.Max(1, days.Max(d => d.TotalClicks));
+        const double maxBar = 96;
+
+        foreach (var day in days)
+        {
+            var column = new Grid { Margin = new Thickness(5, 0, 5, 0) };
+            column.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            column.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            column.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            var count = new TextBlock
+            {
+                Text = day.TotalClicks.ToString(),
+                Foreground = muted,
+                FontSize = 11,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 4)
+            };
+            Grid.SetRow(count, 0);
+
+            var height = day.TotalClicks == 0 ? 3 : Math.Max(6, day.TotalClicks / (double)max * maxBar);
+            var bar = new Border
+            {
+                Height = height,
+                Background = accent,
+                CornerRadius = new CornerRadius(4),
+                VerticalAlignment = VerticalAlignment.Bottom
+            };
+            Grid.SetRow(bar, 1);
+
+            var label = new TextBlock
+            {
+                Text = day.Label,
+                Foreground = muted,
+                FontSize = 11,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 6, 0, 0)
+            };
+            Grid.SetRow(label, 2);
+
+            column.Children.Add(count);
+            column.Children.Add(bar);
+            column.Children.Add(label);
+            ActivityChart.Children.Add(column);
+        }
+    }
+
+    private void OnResetActivity(object sender, RoutedEventArgs e)
+    {
+        var confirm = MessageBox.Show(
+            "Remove all click counts stored on this PC?",
+            "Reset activity history", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+        if (confirm != MessageBoxResult.OK) return;
+        _activity.Reset();
+        PopulateActivity();
+        ActivityStatus.Text = "Activity history cleared.";
+        ActivityStatus.Visibility = Visibility.Visible;
     }
 
     // Pick random presets and colors, in the spirit of the macOS "Randomize" button.

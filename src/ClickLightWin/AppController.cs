@@ -22,12 +22,15 @@ public sealed class AppController : IDisposable
     private readonly SettingsStore _settingsStore = new();
     private readonly LaunchAtLoginController _launchAtLogin = new();
     private readonly ProfileStore _profileStore = new();
+    private readonly ActivityStore _activity = new();
     private readonly UpdateService _updates = new();
     private Settings _settings = new();
     private TrayIcon? _tray;
     private OverlayManager? _overlays;
     private SettingsWindow? _settingsWindow;
     private DispatcherTimer? _updateTimer;
+    private DispatcherTimer? _activitySaveTimer;
+    private ClickButton? _dragCounted; // which button's current drag gesture already counted
 
     public void Start()
     {
@@ -73,6 +76,11 @@ public sealed class AppController : IDisposable
         _hook.Install();
 
         UpdateKeyboardHook(); // installs the keyboard hook only if the shortcut display is on
+
+        // Persist the click tallies periodically (they are cheap in-memory otherwise).
+        _activitySaveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _activitySaveTimer.Tick += (_, _) => _activity.Save();
+        _activitySaveTimer.Start();
 
         InitializeUpdates();
     }
@@ -181,6 +189,7 @@ public sealed class AppController : IDisposable
 
     private void OnClick(ClickEvent click)
     {
+        RecordActivity(click); // count real clicks regardless of Enabled / settings being open
         if (!_settings.Enabled || OverlaysSuspended) return;
         switch (click.Phase)
         {
@@ -210,6 +219,26 @@ public sealed class AppController : IDisposable
         }
     }
 
+    // Tally clicks for the Activity view: each press counts for its button, and each
+    // drag gesture counts once (not once per move event).
+    private void RecordActivity(ClickEvent click)
+    {
+        switch (click.Phase)
+        {
+            case ClickPhase.Down:
+                _dragCounted = null;
+                _activity.RecordClick(click.Button);
+                break;
+            case ClickPhase.Drag when _dragCounted != click.Button:
+                _dragCounted = click.Button;
+                _activity.RecordDrag();
+                break;
+            case ClickPhase.Up:
+                _dragCounted = null;
+                break;
+        }
+    }
+
     // The global hotkey path. The tray menu toggles Enabled on its own; both just
     // mutate the shared settings, and the tray refreshes its checkmarks on open.
     private void ToggleEnabled()
@@ -233,7 +262,7 @@ public sealed class AppController : IDisposable
         // Edit a detached draft; the live settings (and overlays) are untouched until
         // the user commits with OK. Cancel just discards the draft.
         var draft = _settings.Clone();
-        var window = _settingsWindow = new SettingsWindow(draft, _profileStore);
+        var window = _settingsWindow = new SettingsWindow(draft, _profileStore, _activity);
         _settingsWindow.Closed += (_, _) =>
         {
             _settingsWindow = null;
@@ -252,6 +281,8 @@ public sealed class AppController : IDisposable
     {
         _settingsStore.Save(_settings);
         _updateTimer?.Stop();
+        _activitySaveTimer?.Stop();
+        _activity.Save();
         _hook.Dispose();
         _keyboardHook.Dispose();
         _hotKeys.Dispose();

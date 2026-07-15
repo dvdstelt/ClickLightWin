@@ -599,13 +599,59 @@
           <TextBlock x:Name="ProfileStatus" Style="{StaticResource RowSub}" Visibility="Collapsed" />
         </StackPanel>
 
-        <!-- ===== Activity (placeholder) ===== -->
+        <!-- ===== Activity ===== -->
         <StackPanel x:Name="PaneActivity" Visibility="Collapsed">
           <TextBlock Text="Activity" Style="{StaticResource PaneTitle}" />
-          <TextBlock Text="A local daily view of your clicking." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
+          <TextBlock Text="A local, on-device view of your clicking." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
+
           <Border Style="{StaticResource CardBox}">
-            <TextBlock Text="Coming soon." Style="{StaticResource RowSub}" />
+            <StackPanel>
+              <TextBlock Text="Daily Clicks" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Your last seven days. Stored only on this PC." Style="{StaticResource CardSubtitle}" Margin="0,0,0,10" />
+              <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="TodayTotal" Text="0" Foreground="{StaticResource Text}" FontSize="30" FontWeight="SemiBold" VerticalAlignment="Bottom" />
+                <TextBlock Text="clicks today" Foreground="{StaticResource Muted}" FontSize="13" VerticalAlignment="Bottom" Margin="8,0,0,5" />
+              </StackPanel>
+              <UniformGrid x:Name="ActivityChart" Rows="1" Height="150" Margin="0,14,0,0" />
+            </StackPanel>
           </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Today" Style="{StaticResource CardTitle}" Margin="0,0,0,12" />
+              <UniformGrid Rows="1" Columns="4">
+                <StackPanel>
+                  <TextBlock x:Name="MetricLeft" Text="0" Foreground="{StaticResource Text}" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                  <TextBlock Text="Left" Foreground="{StaticResource Muted}" FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock x:Name="MetricRight" Text="0" Foreground="{StaticResource Text}" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                  <TextBlock Text="Right" Foreground="{StaticResource Muted}" FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock x:Name="MetricMiddle" Text="0" Foreground="{StaticResource Text}" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                  <TextBlock Text="Middle" Foreground="{StaticResource Muted}" FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock x:Name="MetricDrags" Text="0" Foreground="{StaticResource Text}" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                  <TextBlock Text="Drags" Foreground="{StaticResource Muted}" FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                </StackPanel>
+              </UniformGrid>
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <Grid>
+              <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+              <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                <TextBlock Text="Reset Activity History" Style="{StaticResource RowTitle}" />
+                <TextBlock Text="Remove all click counts stored on this PC." Style="{StaticResource RowSub}" />
+              </StackPanel>
+              <Button Grid.Column="1" Content="Reset" Style="{StaticResource DangerButton}" VerticalAlignment="Center" Click="OnResetActivity" />
+            </Grid>
+          </Border>
+
+          <TextBlock x:Name="ActivityStatus" Style="{StaticResource RowSub}" Visibility="Collapsed" />
         </StackPanel>
 
         <!-- ===== Menu Layout (placeholder) ===== -->
