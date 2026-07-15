@@ -24,6 +24,7 @@ public sealed class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _laserItem;
     private readonly ToolStripMenuItem _releaseItem;
     private readonly ToolStripMenuItem _dragItem;
+    private readonly ToolStripMenuItem _shortcutsItem;
     private readonly ToolStripMenuItem _launchItem;
     private readonly List<(ToolStripMenuItem Item, double Value)> _sizeItems = [];
     private readonly List<(ToolStripMenuItem Item, double Value)> _durationItems = [];
@@ -48,6 +49,7 @@ public sealed class TrayIcon : IDisposable
         _laserItem = Check("Laser pointer mode", () => Toggle(s => s.ShowLaserPointer = !s.ShowLaserPointer));
         _releaseItem = Check("Show release ring", () => Toggle(s => s.ShowRelease = !s.ShowRelease));
         _dragItem = Check("Show drag trail", () => Toggle(s => s.ShowDrag = !s.ShowDrag));
+        _shortcutsItem = Check("Show keyboard shortcuts", () => Toggle(s => s.ShowShortcuts = !s.ShowShortcuts));
         _launchItem = Check("Launch at login", () => _launchAtLogin.SetEnabled(!_launchAtLogin.IsEnabled));
 
         menu.Items.Add(_enabledItem);
@@ -55,6 +57,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_releaseItem);
         menu.Items.Add(_dragItem);
+        menu.Items.Add(_shortcutsItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(PresetSubmenu("Size", Presets.Sizes, _sizeItems, v => _settings.BaseDiameterDips = v));
         menu.Items.Add(PresetSubmenu("Duration", Presets.Durations, _durationItems, v => _settings.PulseDurationMs = v));
@@ -134,6 +137,7 @@ public sealed class TrayIcon : IDisposable
         _laserItem.Checked = _settings.ShowLaserPointer;
         _releaseItem.Checked = _settings.ShowRelease;
         _dragItem.Checked = _settings.ShowDrag;
+        _shortcutsItem.Checked = _settings.ShowShortcuts;
         _launchItem.Checked = _launchAtLogin.IsEnabled;
         foreach (var (item, value) in _sizeItems) item.Checked = Near(_settings.BaseDiameterDips, value);
         foreach (var (item, value) in _durationItems) item.Checked = Near(_settings.PulseDurationMs, value);

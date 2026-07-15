@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:ClickLightWin"
+        xmlns:views="clr-namespace:ClickLightWin.Views"
         Title="ClickLight Settings"
         Width="400"
         SizeToContent="Height"
@@ -92,44 +93,46 @@
       <Setter Property="Margin" Value="2,0,0,6" />
     </Style>
 
-    <!-- Horizontal color swatch picker -->
-    <Style x:Key="SwatchPicker" TargetType="ListBox">
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="HorizontalAlignment" Value="Left" />
-      <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
-      <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
-      <Setter Property="ItemsPanel">
+    <!-- Compact color dropdown: a swatch + name per item -->
+    <DataTemplate x:Key="ColorItem">
+      <StackPanel Orientation="Horizontal">
+        <Border Width="16" Height="16" CornerRadius="4" Background="{Binding Brush}"
+                BorderBrush="{StaticResource SegmentBorder}" BorderThickness="1" VerticalAlignment="Center" />
+        <TextBlock Text="{Binding Name}" Foreground="{StaticResource Text}" Margin="8,0,0,0" VerticalAlignment="Center" />
+      </StackPanel>
+    </DataTemplate>
+
+    <Style x:Key="ColorCombo" TargetType="ComboBox">
+      <Setter Property="ItemsSource" Value="{x:Static local:Palette.Colors}" />
+      <Setter Property="SelectedValuePath" Value="Hex" />
+      <Setter Property="ItemTemplate" Value="{StaticResource ColorItem}" />
+      <Setter Property="Width" Value="128" />
+      <Setter Property="Padding" Value="8,3" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <!-- Small reset glyph button next to each shortcut -->
+    <Style x:Key="ResetButton" TargetType="Button">
+      <Setter Property="Content" Value="&#x21BA;" />
+      <Setter Property="ToolTip" Value="Reset to default" />
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="Width" Value="26" />
+      <Setter Property="Height" Value="26" />
+      <Setter Property="Template">
         <Setter.Value>
-          <ItemsPanelTemplate>
-            <StackPanel Orientation="Horizontal" />
-          </ItemsPanelTemplate>
-        </Setter.Value>
-      </Setter>
-      <Setter Property="ItemContainerStyle">
-        <Setter.Value>
-          <Style TargetType="ListBoxItem">
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-              <Setter.Value>
-                <ControlTemplate TargetType="ListBoxItem">
-                  <Border x:Name="ring" Width="34" Height="34" CornerRadius="17" Margin="0,0,8,0"
-                          BorderThickness="2" BorderBrush="Transparent">
-                    <Border Width="24" Height="24" CornerRadius="12" Background="{Binding Brush}" />
-                  </Border>
-                  <ControlTemplate.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
-                      <Setter TargetName="ring" Property="BorderBrush" Value="{StaticResource SegmentBorder}" />
-                    </Trigger>
-                    <Trigger Property="IsSelected" Value="True">
-                      <Setter TargetName="ring" Property="BorderBrush" Value="{StaticResource Text}" />
-                    </Trigger>
-                  </ControlTemplate.Triggers>
-                </ControlTemplate>
-              </Setter.Value>
-            </Setter>
-          </Style>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="bg" Background="Transparent" CornerRadius="6">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="bg" Property="Background" Value="#E3E6EA" />
+                <Setter Property="Foreground" Value="{StaticResource Text}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
         </Setter.Value>
       </Setter>
     </Style>
@@ -141,6 +144,33 @@
       <Setter Property="CornerRadius" Value="5" />
       <Setter Property="Padding" Value="9,3" />
       <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Click-to-record shortcut field -->
+    <Style TargetType="views:ShortcutRecorder">
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="MinWidth" Value="128" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="views:ShortcutRecorder">
+            <Border x:Name="box" Background="White" BorderBrush="{StaticResource SegmentBorder}"
+                    BorderThickness="1" CornerRadius="6" Padding="10,5">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource Accent}" />
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource Accent}" />
+                <Setter TargetName="box" Property="Background" Value="#EAF1FE" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
     </Style>
 
     <SolidColorBrush x:Key="TrackOff" Color="#D1D5DB" />
@@ -192,25 +222,27 @@
              SelectedValue="{Binding PulseDurationMs, Mode=TwoWay}"
              Margin="0,0,0,20" />
 
-    <TextBlock Text="LEFT CLICK COLOR" Style="{StaticResource SectionLabel}" />
-    <ListBox Style="{StaticResource SwatchPicker}"
-             ItemsSource="{x:Static local:Palette.Colors}" SelectedValuePath="Hex"
-             SelectedValue="{Binding LeftColorHex, Mode=TwoWay}" Margin="0,0,0,16" />
-
-    <TextBlock Text="RIGHT CLICK COLOR" Style="{StaticResource SectionLabel}" />
-    <ListBox Style="{StaticResource SwatchPicker}"
-             ItemsSource="{x:Static local:Palette.Colors}" SelectedValuePath="Hex"
-             SelectedValue="{Binding RightColorHex, Mode=TwoWay}" Margin="0,0,0,16" />
-
-    <TextBlock Text="MIDDLE CLICK COLOR" Style="{StaticResource SectionLabel}" />
-    <ListBox Style="{StaticResource SwatchPicker}"
-             ItemsSource="{x:Static local:Palette.Colors}" SelectedValuePath="Hex"
-             SelectedValue="{Binding MiddleColorHex, Mode=TwoWay}" Margin="0,0,0,16" />
-
-    <TextBlock Text="ANNOTATION COLOR" Style="{StaticResource SectionLabel}" />
-    <ListBox Style="{StaticResource SwatchPicker}"
-             ItemsSource="{x:Static local:Palette.Colors}" SelectedValuePath="Hex"
-             SelectedValue="{Binding AnnotationColorHex, Mode=TwoWay}" Margin="0,0,0,20" />
+    <TextBlock Text="COLORS" Style="{StaticResource SectionLabel}" />
+    <Grid Margin="0,0,0,20">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+      <TextBlock Grid.Row="0" Grid.Column="0" Text="Left click" Foreground="{StaticResource Text}" VerticalAlignment="Center" Margin="0,0,0,6" />
+      <ComboBox Grid.Row="0" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding LeftColorHex, Mode=TwoWay}" Margin="0,0,0,6" />
+      <TextBlock Grid.Row="1" Grid.Column="0" Text="Right click" Foreground="{StaticResource Text}" VerticalAlignment="Center" Margin="0,0,0,6" />
+      <ComboBox Grid.Row="1" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding RightColorHex, Mode=TwoWay}" Margin="0,0,0,6" />
+      <TextBlock Grid.Row="2" Grid.Column="0" Text="Middle click" Foreground="{StaticResource Text}" VerticalAlignment="Center" Margin="0,0,0,6" />
+      <ComboBox Grid.Row="2" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding MiddleColorHex, Mode=TwoWay}" Margin="0,0,0,6" />
+      <TextBlock Grid.Row="3" Grid.Column="0" Text="Annotations" Foreground="{StaticResource Text}" VerticalAlignment="Center" />
+      <ComboBox Grid.Row="3" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding AnnotationColorHex, Mode=TwoWay}" />
+    </Grid>
 
     <CheckBox Content="Show drag trail" IsChecked="{Binding ShowDrag}"
               Style="{StaticResource ToggleSwitch}" Margin="2,0,0,14" />
@@ -230,17 +262,34 @@
     <Border Background="{StaticResource Segment}" CornerRadius="8" Padding="14,12" Margin="0,0,0,20">
       <StackPanel>
         <TextBlock Text="SHORTCUTS" Style="{StaticResource SectionLabel}" Margin="0,0,0,8" />
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-          <Border Style="{StaticResource KeyCap}"><TextBlock Text="Ctrl" Foreground="{StaticResource Text}" /></Border>
-          <TextBlock Text="+" Foreground="{StaticResource Muted}" VerticalAlignment="Center" Margin="6,0" />
-          <Border Style="{StaticResource KeyCap}"><TextBlock Text="Shift" Foreground="{StaticResource Text}" /></Border>
-          <TextBlock Text="+" Foreground="{StaticResource Muted}" VerticalAlignment="Center" Margin="6,0" />
-          <Border Style="{StaticResource KeyCap}"><TextBlock Text="L" Foreground="{StaticResource Text}" /></Border>
-          <TextBlock Text="toggle" Foreground="{StaticResource Muted}" VerticalAlignment="Center" Margin="8,0,0,0" />
-        </StackPanel>
-        <TextBlock Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap"
-                   Text="Ctrl+Shift + left-drag = arrow, right-drag = box • Ctrl+Shift+C clears&#x0a;Ctrl + drag = laser stroke • Ctrl+Shift+D = frozen drawing mode" />
-        <TextBlock Text="Rebinding coming soon." Foreground="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0" />
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Toggle ClickLight" Foreground="{StaticResource Text}"
+                     VerticalAlignment="Center" Margin="0,0,0,6" />
+          <views:ShortcutRecorder Grid.Row="0" Grid.Column="1" Binding="{Binding ToggleHotKey, Mode=TwoWay}" Margin="0,0,0,6" />
+          <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="toggle" Click="OnResetShortcut" Margin="4,0,0,6" />
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="Clear annotations" Foreground="{StaticResource Text}"
+                     VerticalAlignment="Center" Margin="0,0,0,6" />
+          <views:ShortcutRecorder Grid.Row="1" Grid.Column="1" Binding="{Binding ClearHotKey, Mode=TwoWay}" Margin="0,0,0,6" />
+          <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="clear" Click="OnResetShortcut" Margin="4,0,0,6" />
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Drawing mode" Foreground="{StaticResource Text}"
+                     VerticalAlignment="Center" />
+          <views:ShortcutRecorder Grid.Row="2" Grid.Column="1" Binding="{Binding DrawModeHotKey, Mode=TwoWay}" />
+          <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="draw" Click="OnResetShortcut" Margin="4,0,0,0" />
+        </Grid>
+        <TextBlock Foreground="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
+                   Text="Click a field and press a new combination (needs Ctrl, Alt or Win). Esc cancels." />
+        <TextBlock Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"
+                   Text="Fixed gestures: Ctrl+Shift + left-drag = arrow, right-drag = box" />
       </StackPanel>
     </Border>
 

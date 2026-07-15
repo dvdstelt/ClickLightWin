@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Windows;
+using System.Windows.Input;
 using Color = System.Windows.Media.Color;
 using Colors = System.Windows.Media.Colors;
 
@@ -29,6 +30,9 @@ public sealed class Settings : INotifyPropertyChanged
     private string _rightColorHex = "#F97316";  // orange
     private string _middleColorHex = "#22C55E"; // green
     private string _annotationColorHex = "#EF4444"; // red (shared by arrows and boxes)
+    private HotKeyBinding _toggleHotKey = HotKeyBinding.DefaultToggle;
+    private HotKeyBinding _clearHotKey = HotKeyBinding.DefaultClear;
+    private HotKeyBinding _drawModeHotKey = HotKeyBinding.DefaultDrawMode;
 
     // ---- Persisted, user-editable -------------------------------------------
 
@@ -47,6 +51,9 @@ public sealed class Settings : INotifyPropertyChanged
     public string RightColorHex { get => _rightColorHex; set => Set(ref _rightColorHex, value); }
     public string MiddleColorHex { get => _middleColorHex; set => Set(ref _middleColorHex, value); }
     public string AnnotationColorHex { get => _annotationColorHex; set => Set(ref _annotationColorHex, value); }
+    public HotKeyBinding ToggleHotKey { get => _toggleHotKey; set => Set(ref _toggleHotKey, value); }
+    public HotKeyBinding ClearHotKey { get => _clearHotKey; set => Set(ref _clearHotKey, value); }
+    public HotKeyBinding DrawModeHotKey { get => _drawModeHotKey; set => Set(ref _drawModeHotKey, value); }
 
     // ---- Computed render constants (not persisted, not user-editable yet) ----
 
