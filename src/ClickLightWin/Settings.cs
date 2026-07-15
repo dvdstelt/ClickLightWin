@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
@@ -33,6 +34,7 @@ public sealed class Settings : INotifyPropertyChanged
     private HotKeyBinding _toggleHotKey = HotKeyBinding.DefaultToggle;
     private HotKeyBinding _clearHotKey = HotKeyBinding.DefaultClear;
     private HotKeyBinding _drawModeHotKey = HotKeyBinding.DefaultDrawMode;
+    private string _currentProfileName = ProfileStore.DefaultProfileName;
 
     // ---- Persisted, user-editable -------------------------------------------
 
@@ -54,6 +56,12 @@ public sealed class Settings : INotifyPropertyChanged
     public HotKeyBinding ToggleHotKey { get => _toggleHotKey; set => Set(ref _toggleHotKey, value); }
     public HotKeyBinding ClearHotKey { get => _clearHotKey; set => Set(ref _clearHotKey, value); }
     public HotKeyBinding DrawModeHotKey { get => _drawModeHotKey; set => Set(ref _drawModeHotKey, value); }
+
+    /// <summary>Name of the profile currently selected in the settings window.</summary>
+    public string CurrentProfileName { get => _currentProfileName; set => Set(ref _currentProfileName, value); }
+
+    /// <summary>Order and visibility of the system-tray menu items (Quit always shown).</summary>
+    public ObservableCollection<MenuLayoutEntry> MenuLayout { get; set; } = TrayMenu.DefaultLayout();
 
     // ---- Computed render constants (not persisted, not user-editable yet) ----
 
@@ -105,6 +113,45 @@ public sealed class Settings : INotifyPropertyChanged
     [JsonIgnore] public Duration ShortcutHold => new(TimeSpan.FromMilliseconds(1100));
     [JsonIgnore] public Duration ShortcutFade => new(TimeSpan.FromMilliseconds(350));
     [JsonIgnore] public int ShortcutStackMax => 6;
+
+    /// <summary>A detached copy of the user-editable settings, for editing in a draft.</summary>
+    public Settings Clone()
+    {
+        var copy = new Settings();
+        copy.CopyFrom(this);
+        return copy;
+    }
+
+    /// <summary>
+    /// Copy all persisted, user-editable values from <paramref name="other"/> into this
+    /// instance through the setters, so bindings, overlays, and hotkeys react. Used to
+    /// commit a settings-window draft back onto the live settings.
+    /// </summary>
+    public void CopyFrom(Settings other)
+    {
+        SchemaVersion = other.SchemaVersion;
+        Enabled = other.Enabled;
+        ShowDrag = other.ShowDrag;
+        ShowRelease = other.ShowRelease;
+        ShowLaserPointer = other.ShowLaserPointer;
+        EnableAnnotations = other.EnableAnnotations;
+        ShowShortcuts = other.ShowShortcuts;
+        BaseDiameterDips = other.BaseDiameterDips;
+        PulseDurationMs = other.PulseDurationMs;
+        LeftColorHex = other.LeftColorHex;
+        RightColorHex = other.RightColorHex;
+        MiddleColorHex = other.MiddleColorHex;
+        AnnotationColorHex = other.AnnotationColorHex;
+        ToggleHotKey = other.ToggleHotKey;
+        ClearHotKey = other.ClearHotKey;
+        DrawModeHotKey = other.DrawModeHotKey;
+        CurrentProfileName = other.CurrentProfileName;
+
+        // Deep-copy the menu layout into this instance's own collection (kept, not
+        // replaced, so any UI bound to it stays live).
+        MenuLayout.Clear();
+        foreach (var entry in other.MenuLayout) MenuLayout.Add(entry.Clone());
+    }
 
     public Color ColorFor(ClickButton button) => ParseHex(button switch
     {

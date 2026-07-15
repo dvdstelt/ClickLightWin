@@ -21,12 +21,16 @@ public sealed class AppController : IDisposable
     private readonly HotKeyManager _hotKeys = new();
     private readonly SettingsStore _settingsStore = new();
     private readonly LaunchAtLoginController _launchAtLogin = new();
+    private readonly ProfileStore _profileStore = new();
+    private readonly ActivityStore _activity = new();
     private readonly UpdateService _updates = new();
     private Settings _settings = new();
     private TrayIcon? _tray;
     private OverlayManager? _overlays;
     private SettingsWindow? _settingsWindow;
     private DispatcherTimer? _updateTimer;
+    private DispatcherTimer? _activitySaveTimer;
+    private ClickButton? _dragCounted; // which button's current drag gesture already counted
 
     public void Start()
     {
@@ -44,7 +48,7 @@ public sealed class AppController : IDisposable
             if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.ShowShortcuts))
                 UpdateKeyboardHook();
         };
-        _keyboardHook.ShortcutDetected += keys => _overlays?.DispatchShortcut(keys);
+        _keyboardHook.ShortcutDetected += keys => { if (!OverlaysSuspended) _overlays?.DispatchShortcut(keys); };
 
         // The tray menu mutates the shared settings directly and refreshes its
         // checkmarks on open, so no per-item sync is needed here.
@@ -72,6 +76,11 @@ public sealed class AppController : IDisposable
         _hook.Install();
 
         UpdateKeyboardHook(); // installs the keyboard hook only if the shortcut display is on
+
+        // Persist the click tallies periodically (they are cheap in-memory otherwise).
+        _activitySaveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _activitySaveTimer.Tick += (_, _) => _activity.Save();
+        _activitySaveTimer.Start();
 
         InitializeUpdates();
     }
@@ -131,6 +140,11 @@ public sealed class AppController : IDisposable
     // The laser features (glow move stream, Ctrl+drag stroke) run only while the laser is on.
     private bool LaserActive => _settings.Enabled && _settings.ShowLaserPointer;
 
+    // While the settings window is open the user edits a draft and previews in its pad,
+    // so the live overlay is paused: the real screen stays quiet (no laser following the
+    // cursor over the window, no double pulse when clicking in the pad) until OK/Cancel.
+    private bool OverlaysSuspended => _settingsWindow is not null;
+
     private void ConfigureHotkeys()
     {
         _hotKeys.Configure(_settings.ToggleHotKey, _settings.ClearHotKey, _settings.DrawModeHotKey);
@@ -151,7 +165,11 @@ public sealed class AppController : IDisposable
     }
 
     // Left-drag draws an arrow, right-drag a box; the hook tags each with its tool.
-    private void OnAnnotation(AnnotationEvent evt) => _overlays?.DispatchAnnotation(evt);
+    private void OnAnnotation(AnnotationEvent evt)
+    {
+        if (OverlaysSuspended) return;
+        _overlays?.DispatchAnnotation(evt);
+    }
 
     public void ClearAnnotations() => _overlays?.ClearAnnotations();
 
@@ -171,7 +189,8 @@ public sealed class AppController : IDisposable
 
     private void OnClick(ClickEvent click)
     {
-        if (!_settings.Enabled) return;
+        RecordActivity(click); // count real clicks regardless of Enabled / settings being open
+        if (!_settings.Enabled || OverlaysSuspended) return;
         switch (click.Phase)
         {
             case ClickPhase.Down:
@@ -200,6 +219,26 @@ public sealed class AppController : IDisposable
         }
     }
 
+    // Tally clicks for the Activity view: each press counts for its button, and each
+    // drag gesture counts once (not once per move event).
+    private void RecordActivity(ClickEvent click)
+    {
+        switch (click.Phase)
+        {
+            case ClickPhase.Down:
+                _dragCounted = null;
+                _activity.RecordClick(click.Button);
+                break;
+            case ClickPhase.Drag when _dragCounted != click.Button:
+                _dragCounted = click.Button;
+                _activity.RecordDrag();
+                break;
+            case ClickPhase.Up:
+                _dragCounted = null;
+                break;
+        }
+    }
+
     // The global hotkey path. The tray menu toggles Enabled on its own; both just
     // mutate the shared settings, and the tray refreshes its checkmarks on open.
     private void ToggleEnabled()
@@ -220,12 +259,19 @@ public sealed class AppController : IDisposable
         // shortcut recorder neither fires an action nor collides with the OS registration.
         _hotKeys.Suspend();
 
-        _settingsWindow = new SettingsWindow(_settings);
+        // Edit a detached draft; the live settings (and overlays) are untouched until
+        // the user commits with OK. Cancel just discards the draft.
+        var draft = _settings.Clone();
+        var window = _settingsWindow = new SettingsWindow(draft, _profileStore, _activity);
         _settingsWindow.Closed += (_, _) =>
         {
             _settingsWindow = null;
-            ConfigureHotkeys(); // apply any rebindings and re-enable the hotkeys
-            _settingsStore.Save(_settings); // persist any edits made in the window
+            if (window.Committed)
+            {
+                _settings.CopyFrom(draft);       // apply the draft to the overlays
+                _settingsStore.Save(_settings);  // and persist it
+            }
+            ConfigureHotkeys(); // re-register from the (possibly updated) live settings and re-enable
         };
         _settingsWindow.Show();
         _settingsWindow.Activate();
@@ -235,6 +281,8 @@ public sealed class AppController : IDisposable
     {
         _settingsStore.Save(_settings);
         _updateTimer?.Stop();
+        _activitySaveTimer?.Stop();
+        _activity.Save();
         _hook.Dispose();
         _keyboardHook.Dispose();
         _hotKeys.Dispose();

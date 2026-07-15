@@ -1,51 +1,63 @@
-# ClickLightWin
+# ClickLight for Windows
 
-A Windows menu-bar (system-tray) app that highlights your mouse clicks on screen
-during live demos, screen sharing, and UX reviews. It is a ground-up C# / .NET
-(WPF) reimplementation of the macOS app [ClickLight](https://github.com/aurorascharff/ClickLight),
-not a port: every macOS primitive is mapped to a clean Windows equivalent.
+A small Windows application in the system-tray that highlights your clicks during live demos, screen sharing, and other moments where people need to be able to follow what you are doing.
 
-On each click, a short animated pulse is drawn at the cursor and fades out. The
-app runs headless apart from a tray icon; there is no main window.
+Screen recorders can add click effects after the fact. ClickLight is for the live moment itself, when you need the audience to see exactly when you clicked without interrupting your flow.
 
-## Status
+It is a ground-up C# / .NET (WPF) reimplementation of the macOS app [ClickLight](https://github.com/aurorascharff/ClickLight), not a port: every macOS primitive is mapped to a clean Windows equivalent.
 
-**1.1.0.** Feature-complete for daily use:
+On each click, a short animated pulse is drawn at the cursor and fades out. The app runs headless apart from a tray icon; there is no main window.
 
-- System-wide click capture via a low-level mouse hook
-- Transparent, click-through, topmost overlay per monitor, DPI-correct (Per-Monitor v2)
-- Fading pulse on press, a contracting ring on hold + release, and a fading drag trail
-- **Laser-pointer mode**: a glowing cursor that trails the pointer during presentations
-- **Annotations**: hold Ctrl+Shift and drag — left-drag draws an arrow, right-drag a box; they persist until Ctrl+Shift+C clears them
-- **Live shortcut display**: shows keyboard shortcuts (Ctrl+C, Alt+Tab, …) as key-cap pills for screencasts — modifier combos only, off by default
-- Per-button and annotation colors, Size/Duration presets
-- A modern settings window and a dark tray menu (feature toggles, preset submenus)
-- Global toggle hotkey **Ctrl+Shift+L**, launch-at-login, single-instance guard
-- Settings persisted to `%APPDATA%\ClickLightWin\settings.json`
-- **Auto-update** (installer build only): checks GitHub Releases in the background
-  and, when a newer version is out, shows a "Restart to update" prompt in the tray.
-  Nothing installs until you click it; the portable exe updates manually.
+## Demo
+
+-- soon --
+
+## Features
+
+- Click highlights across macOS apps
+- Separate visuals for press, release, right-click, and drag
+- Optional laser pointer mode with drawing mode
+- Optional keyboard shortcuts
+- Local daily click activity chart with a resettable seven-day history
+- Dedicated settings window with presets, profiles, and a sidebar preview pad with Randomize
+- Custom color picker in Settings
+- One default ClickLight toggle shortcut, with optional shortcuts for other actions
+- System-tray menu
+  - Quick presets for size, duration
+  - Customizable menu for hiding optional controls you do not use
+
+- Test pulse for verifying overlay behavior
 
 See [docs/04-build-checklist.md](docs/04-build-checklist.md) for the roadmap this was built against.
 
-> Note: multi-monitor click routing and mixed-DPI placement are implemented but have
-> only been verified on a single monitor (100% and 150%). Worth a pass on multi-monitor
-> and mixed-DPI hardware.
+> Note: multi-monitor click routing and mixed-DPI placement are implemented but have only been verified on a single monitor (100% and 150%). Worth a pass on multi-monitor and mixed-DPI hardware.
+
+## Keyboard Shortcuts
+
+ClickLight includes one default global shortcut for quick toggles during demos. Other actions can be assigned shortcuts in Settings if you want them.
+
+| Shortcut | Action |
+| --- | --- |
+| `Control + Shift + L` | Toggle ClickLight on/off |
+| `Control + Shift + D` | Toggle drawing mode, cleared by exiting drawing mode. |
+| `Control + Shift + left-click` & drag | Draw an arrow |
+| `Control + Shift + right-click` & drag | Draw a box |
+| `Control + SHift + C` | Clear drawings |
+
+All shortcuts can be changed in Settings.
 
 ## Download
 
 Grab the latest from the [Releases](../../releases) page. Two options:
 
-- **`ClickLight-vX.Y.Z-Setup.exe`** (installer, ~7 MB) — recommended. Installs the app,
-  adds Start-menu/desktop shortcuts, and installs the .NET 10 Desktop Runtime for you if
-  it is missing.
-- **`ClickLight-vX.Y.Z-win-x64.exe`** (bare app, ~250 KB) — for machines that already
-  have the .NET 10 Desktop Runtime. Just run it.
-- **`ClickLight-vX.Y.Z-win-arm64.exe`** — the same bare app for Windows-on-Arm
-  (needs the arm64 .NET 10 Desktop Runtime).
+- **`ClickLight-vX.Y.Z-Setup.exe`** (installer, ~7 MB) — recommended. Installs the app, adds Start-menu/desktop shortcuts, and installs the .NET 10 Desktop Runtime for you if it is missing.
+- **`ClickLight-vX.Y.Z-win-x64.exe`** (bare app, ~250 KB) — for machines that already have the .NET 10 Desktop Runtime. Just run it.
+- **`ClickLight-vX.Y.Z-win-arm64.exe`** — the same bare app for Windows-on-Arm (needs the arm64 .NET 10 Desktop Runtime).
 
-Until code signing is set up (see below), both are unsigned, so on first launch Windows
-SmartScreen may say "Windows protected your PC" — click **More info -> Run anyway**.
+> [!NOTE]
+>
+> Until code signing is set up (see below), both are unsigned, so on first launch Windows
+> SmartScreen may say "Windows protected your PC" — click **More info -> Run anyway**.
 
 ## Known limitations
 
@@ -64,7 +76,3 @@ SmartScreen may say "Windows protected your PC" — click **More info -> Run any
 - **Mixed-DPI multi-monitor.** Placement is verified at 100% and 150% on a single
   monitor. Cross-monitor routing and mixed-DPI setups (e.g. a 150% laptop panel
   plus a 100% external) should be verified on that hardware.
-
-The macOS Swift sources under `ClickLight/Sources/ClickLight/` are the source of
-truth for behavior (pulse shapes, timing, presets). The mapping from Swift files
-to Windows components is in [docs/01-architecture.md](docs/01-architecture.md).

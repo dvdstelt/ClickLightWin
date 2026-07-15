@@ -33,6 +33,11 @@ public sealed class TrayIcon : IDisposable
     private readonly List<(ToolStripMenuItem Item, double Value)> _sizeItems = [];
     private readonly List<(ToolStripMenuItem Item, double Value)> _durationItems = [];
 
+    // Every configurable item, keyed by id. The visible menu is (re)built from
+    // Settings.MenuLayout each time it opens, so ordering and hiding take effect live.
+    private readonly Dictionary<TrayMenuItem, ToolStripItem> _items;
+    private bool _updateAvailable;
+
     public TrayIcon(Settings settings, LaunchAtLoginController launchAtLogin,
                     Action persist, Action openSettings, Action clearAnnotations,
                     Action applyUpdate, Action quit)
@@ -48,14 +53,13 @@ public sealed class TrayIcon : IDisposable
             ForeColor = Color.White,
             Font = _menuFont
         };
-        menu.Opening += (_, _) => RefreshChecks();
+        menu.Opening += (_, _) => { RefreshChecks(); RebuildMenu(); };
 
-        // Hidden until an update is found, then shown at the very top as a prompt.
+        // Update prompt, pinned above the configured items when an update is found.
         _updateFont = new Font(_menuFont, FontStyle.Bold);
         _updateItem = Item("Restart to update", applyUpdate);
         _updateItem.Font = _updateFont;
-        _updateItem.Visible = false;
-        _updateSeparator = new ToolStripSeparator { Visible = false };
+        _updateSeparator = new ToolStripSeparator();
 
         _enabledItem = Check("Enabled", () => Toggle(s => s.Enabled = !s.Enabled));
         _laserItem = Check("Laser pointer mode", () => Toggle(s => s.ShowLaserPointer = !s.ShowLaserPointer));
@@ -64,26 +68,25 @@ public sealed class TrayIcon : IDisposable
         _shortcutsItem = Check("Show keyboard shortcuts", () => Toggle(s => s.ShowShortcuts = !s.ShowShortcuts));
         _launchItem = Check("Launch at login", () => _launchAtLogin.SetEnabled(!_launchAtLogin.IsEnabled));
 
-        menu.Items.Add(_updateItem);
-        menu.Items.Add(_updateSeparator);
-        menu.Items.Add(_enabledItem);
-        menu.Items.Add(_laserItem);
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(_releaseItem);
-        menu.Items.Add(_dragItem);
-        menu.Items.Add(_shortcutsItem);
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(PresetSubmenu("Size", Presets.Sizes, _sizeItems, v => _settings.BaseDiameterDips = v));
-        menu.Items.Add(PresetSubmenu("Duration", Presets.Durations, _durationItems, v => _settings.PulseDurationMs = v));
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(Item("Clear annotations", clearAnnotations));
-        menu.Items.Add(_launchItem);
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(Item("Settings...", openSettings));
-        menu.Items.Add(Item("About ClickLight", ShowAbout));
-        menu.Items.Add(Item("Quit", quit));
+        _items = new Dictionary<TrayMenuItem, ToolStripItem>
+        {
+            [TrayMenuItem.Enabled] = _enabledItem,
+            [TrayMenuItem.LaserPointer] = _laserItem,
+            [TrayMenuItem.ReleaseRing] = _releaseItem,
+            [TrayMenuItem.DragTrail] = _dragItem,
+            [TrayMenuItem.KeyboardShortcuts] = _shortcutsItem,
+            [TrayMenuItem.Size] = PresetSubmenu("Size", Presets.Sizes, _sizeItems, v => _settings.BaseDiameterDips = v),
+            [TrayMenuItem.Duration] = PresetSubmenu("Duration", Presets.Durations, _durationItems, v => _settings.PulseDurationMs = v),
+            [TrayMenuItem.ClearAnnotations] = Item("Clear annotations", clearAnnotations),
+            [TrayMenuItem.LaunchAtLogin] = _launchItem,
+            [TrayMenuItem.Settings] = Item("Settings...", openSettings),
+            [TrayMenuItem.About] = Item("About ClickLight", ShowAbout),
+            [TrayMenuItem.Quit] = Item("Quit", quit),
+        };
 
-        _iconImage = AppIconFactory.CreatePulseIcon();
+        RebuildMenu();
+
+        _iconImage = LoadAppIcon();
         _icon = new NotifyIcon
         {
             Icon = _iconImage,
@@ -154,10 +157,28 @@ public sealed class TrayIcon : IDisposable
     public void ShowUpdateAvailable(string version)
     {
         _updateItem.Text = $"Restart to update to v{version}";
-        _updateItem.Visible = true;
-        _updateSeparator.Visible = true;
+        _updateAvailable = true; // the next menu open rebuilds with the prompt on top
         ShowInfo("ClickLight update available",
             $"Version {version} is ready. Right-click the tray icon and choose \"Restart to update\".");
+    }
+
+    // Rebuild the menu from the configured layout: the update prompt (if any), then the
+    // visible items in their saved order. Quit is always present and never hidden.
+    private void RebuildMenu()
+    {
+        _menu.Items.Clear();
+        if (_updateAvailable)
+        {
+            _menu.Items.Add(_updateItem);
+            _menu.Items.Add(_updateSeparator);
+        }
+        foreach (var entry in _settings.MenuLayout)
+        {
+            if (!entry.Visible && entry.Item != TrayMenuItem.Quit) continue;
+            if (_items.TryGetValue(entry.Item, out var item)) _menu.Items.Add(item);
+        }
+        if (!_menu.Items.Contains(_items[TrayMenuItem.Quit]))
+            _menu.Items.Add(_items[TrayMenuItem.Quit]); // safety net; Quit is never hidden
     }
 
     private void Toggle(Action<Settings> mutate)
@@ -180,6 +201,27 @@ public sealed class TrayIcon : IDisposable
 
     private static bool Near(double a, double b) => Math.Abs(a - b) < 0.5;
 
+    // The shipped multi-resolution icon; fall back to the drawn pulse icon if the
+    // resource is somehow unavailable.
+    private static Icon LoadAppIcon()
+    {
+        try
+        {
+            var info = System.Windows.Application.GetResourceStream(
+                new Uri("pack://application:,,,/Assets/icon.ico"));
+            if (info is not null)
+            {
+                using var stream = info.Stream;
+                return new Icon(stream);
+            }
+        }
+        catch
+        {
+            // Fall through to the generated icon.
+        }
+        return AppIconFactory.CreatePulseIcon();
+    }
+
     private static void ShowAbout() => MessageBox.Show(
         "ClickLight for Windows\n\nHighlights your mouse clicks on screen during demos and "
         + "screen sharing.\n\nCtrl+Shift+L  toggle\nCtrl+Shift+D  frozen drawing mode"
@@ -192,6 +234,11 @@ public sealed class TrayIcon : IDisposable
         _icon.Visible = false;
         _icon.Dispose();
         _iconImage.Dispose();
+        // Items not currently in the menu (hidden ones, the update prompt) are not owned
+        // by it, so dispose every item we created explicitly.
+        foreach (var item in _items.Values) item.Dispose();
+        _updateItem.Dispose();
+        _updateSeparator.Dispose();
         _menu.Dispose(); // NotifyIcon does not own its ContextMenuStrip
         _menuFont.Dispose();
         _updateFont.Dispose();

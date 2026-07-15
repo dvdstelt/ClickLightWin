@@ -47,6 +47,7 @@ public sealed class SettingsStore
     {
         settings.BaseDiameterDips = Nearest(Presets.Sizes, settings.BaseDiameterDips);
         settings.PulseDurationMs = Nearest(Presets.Durations, settings.PulseDurationMs);
+        TrayMenu.Normalize(settings.MenuLayout); // fill in any items added since this file was written
         return settings;
     }
 

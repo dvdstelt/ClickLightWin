@@ -17,6 +17,7 @@
     <!-- The LibraryImport source generator emits unsafe marshalling code. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
     <Platforms>x64;arm64</Platforms>
     <!--
       WFO0003: WinForms wants high-DPI configured via its API. This is a WPF app that
@@ -28,6 +29,12 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="ClickLightWin.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- App icon (tray + window) and the wordmark shown on the General settings tab. -->
+    <Resource Include="Assets\icon.ico" />
+    <Resource Include="Assets\clicklight-logo.png" />
   </ItemGroup>
 
   <ItemGroup>

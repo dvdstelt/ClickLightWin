@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-07-15
+
+### Added
+
+- Redesigned settings as a sidebar window (General, Event Visibility, Visual Style,
+  Keyboard Shortcuts, Profiles, Activity, Menu Layout).
+- A live, interactive Preview Pad: click and drag inside it to see your current
+  pulse, laser, and drag settings without touching the rest of the screen.
+- Profiles: save named visual setups and switch between them from a dropdown
+  (with a built-in Default), and import/export them as JSON to move between PCs.
+- Activity: a local, on-device view of your daily clicks with a seven-day chart
+  and a Left/Right/Middle/Drags breakdown.
+- Menu Layout: hide individual system-tray menu items and drag to reorder them
+  (Quit is always shown).
+- A designed app icon (tray, window, and installer) and a wordmark on the
+  General settings tab.
+
+### Changed
+
+- Settings changes now apply when you click OK and can be discarded with Cancel,
+  instead of taking effect live as you edit.
+- The settings color and profile dropdowns are dark-themed to match the window.
+
 ## [1.3.0] - 2026-07-15
 
 ### Added
@@ -97,7 +120,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release: fading click pulses drawn at the cursor, a system-tray
   presence, a transparent click-through overlay, and a system-wide mouse hook.
 
-[Unreleased]: https://github.com/dvdstelt/ClickLightWin/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/dvdstelt/ClickLightWin/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/dvdstelt/ClickLightWin/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/dvdstelt/ClickLightWin/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/dvdstelt/ClickLightWin/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/dvdstelt/ClickLightWin/compare/v1.0.0...v1.1.0

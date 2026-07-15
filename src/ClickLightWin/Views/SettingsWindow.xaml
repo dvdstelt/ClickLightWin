@@ -4,24 +4,81 @@
         xmlns:local="clr-namespace:ClickLightWin"
         xmlns:views="clr-namespace:ClickLightWin.Views"
         Title="ClickLight Settings"
-        Width="400"
-        SizeToContent="Height"
-        ResizeMode="NoResize"
+        Icon="/Assets/icon.ico"
+        Width="900" Height="580" MinWidth="820" MinHeight="480"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="True"
-        Background="#FFFFFF"
+        Background="#1E1E20"
         FontFamily="Segoe UI Variable Text, Segoe UI"
         TextOptions.TextFormattingMode="Ideal"
         TextOptions.TextRenderingMode="ClearType">
 
   <Window.Resources>
+    <SolidColorBrush x:Key="WindowBg" Color="#1E1E20" />
+    <SolidColorBrush x:Key="SidebarBg" Color="#252528" />
+    <SolidColorBrush x:Key="Card" Color="#2C2C31" />
+    <SolidColorBrush x:Key="CardBorder" Color="#3A3A42" />
+    <SolidColorBrush x:Key="Text" Color="#ECECEE" />
+    <SolidColorBrush x:Key="Muted" Color="#9A9AA4" />
     <SolidColorBrush x:Key="Accent" Color="#3B82F6" />
-    <SolidColorBrush x:Key="Text" Color="#1F2933" />
-    <SolidColorBrush x:Key="Muted" Color="#6B7280" />
-    <SolidColorBrush x:Key="Segment" Color="#F1F3F5" />
-    <SolidColorBrush x:Key="SegmentBorder" Color="#E3E6EA" />
+    <SolidColorBrush x:Key="Segment" Color="#34343B" />
+    <SolidColorBrush x:Key="SegmentBorder" Color="#45454E" />
+    <SolidColorBrush x:Key="TrackOff" Color="#4A4A54" />
+    <SolidColorBrush x:Key="Hover" Color="#33333A" />
+    <FontFamily x:Key="Icons">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
 
-    <!-- Segmented single-select control (used for size and duration presets) -->
+    <!--Text styles -->
+    <Style x:Key="PaneTitle" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="FontSize" Value="22" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style x:Key="PaneSubtitle" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Margin" Value="0,3,0,0" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style x:Key="CardTitle" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style x:Key="CardSubtitle" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Margin" Value="0,2,0,0" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style x:Key="RowTitle" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="RowSub" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Margin" Value="0,2,0,0" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!--Card container -->
+    <Style x:Key="CardBox" TargetType="Border">
+      <Setter Property="Background" Value="{StaticResource Card}" />
+      <Setter Property="BorderBrush" Value="{StaticResource CardBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="18" />
+      <Setter Property="Margin" Value="0,0,0,16" />
+    </Style>
+
+    <Style x:Key="RowDivider" TargetType="Border">
+      <Setter Property="Height" Value="1" />
+      <Setter Property="Background" Value="{StaticResource CardBorder}" />
+      <Setter Property="Margin" Value="0,10" />
+    </Style>
+
+    <!--Segmented preset control -->
     <Style x:Key="Segmented" TargetType="ListBox">
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Background" Value="Transparent" />
@@ -30,9 +87,7 @@
       <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
       <Setter Property="ItemsPanel">
         <Setter.Value>
-          <ItemsPanelTemplate>
-            <UniformGrid Rows="1" />
-          </ItemsPanelTemplate>
+          <ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate>
         </Setter.Value>
       </Setter>
       <Setter Property="ItemContainerStyle">
@@ -66,14 +121,160 @@
       </Setter>
     </Style>
 
-    <Style x:Key="AccentButton" TargetType="Button">
-      <Setter Property="Foreground" Value="White" />
-      <Setter Property="Background" Value="{StaticResource Accent}" />
+    <!-- Dark ComboBox: box + chevron toggle, dark popup with highlighted items -->
+    <ControlTemplate x:Key="ComboToggle" TargetType="ToggleButton">
+      <Border x:Name="bd" Background="{StaticResource Segment}" BorderBrush="{StaticResource SegmentBorder}"
+              BorderThickness="1" CornerRadius="7">
+        <TextBlock Text="&#xE70D;" FontFamily="{StaticResource Icons}" FontSize="11" Foreground="{StaticResource Muted}"
+                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
+      </Border>
+      <ControlTemplate.Triggers>
+        <Trigger Property="IsMouseOver" Value="True">
+          <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}" />
+        </Trigger>
+      </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+    <Style x:Key="DarkComboItem" TargetType="ComboBoxItem">
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ComboBoxItem">
+            <Border x:Name="bd" Background="Transparent" Padding="{TemplateBinding Padding}">
+              <ContentPresenter />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsHighlighted" Value="True">
+                <Setter TargetName="bd" Property="Background" Value="{StaticResource Accent}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="DarkCombo" TargetType="ComboBox">
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
       <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Height" Value="34" />
+      <Setter Property="ItemContainerStyle" Value="{StaticResource DarkComboItem}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ComboBox">
+            <Grid>
+              <ToggleButton Focusable="False" ClickMode="Press" Template="{StaticResource ComboToggle}"
+                            IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+              <ContentPresenter IsHitTestVisible="False" Margin="10,0,28,0"
+                                VerticalAlignment="Center" HorizontalAlignment="Left"
+                                Content="{TemplateBinding SelectionBoxItem}"
+                                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" />
+              <Popup x:Name="PART_Popup" Placement="Bottom" AllowsTransparency="True" Focusable="False"
+                     IsOpen="{TemplateBinding IsDropDownOpen}" PopupAnimation="Slide">
+                <Border Background="#2A2A31" BorderBrush="{StaticResource SegmentBorder}" BorderThickness="1"
+                        CornerRadius="7" Margin="0,4,0,0" MinWidth="{TemplateBinding ActualWidth}" SnapsToDevicePixels="True">
+                  <ScrollViewer MaxHeight="280">
+                    <ItemsPresenter />
+                  </ScrollViewer>
+                </Border>
+              </Popup>
+            </Grid>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- Color dropdown -->
+    <DataTemplate x:Key="ColorItem">
+      <StackPanel Orientation="Horizontal">
+        <Border Width="16" Height="16" CornerRadius="4" Background="{Binding Brush}"
+                BorderBrush="{StaticResource SegmentBorder}" BorderThickness="1" VerticalAlignment="Center" />
+        <TextBlock Text="{Binding Name}" Foreground="{StaticResource Text}" Margin="8,0,0,0" VerticalAlignment="Center" />
+      </StackPanel>
+    </DataTemplate>
+    <Style x:Key="ColorCombo" TargetType="ComboBox" BasedOn="{StaticResource DarkCombo}">
+      <Setter Property="ItemsSource" Value="{x:Static local:Palette.Colors}" />
+      <Setter Property="SelectedValuePath" Value="Hex" />
+      <Setter Property="ItemTemplate" Value="{StaticResource ColorItem}" />
+      <Setter Property="Width" Value="150" />
+    </Style>
+
+    <!-- Profile name row (explicit template so the dark combo shows the name, not ToString) -->
+    <DataTemplate x:Key="ProfileItem">
+      <TextBlock Text="{Binding Name}" Foreground="{StaticResource Text}" VerticalAlignment="Center" />
+    </DataTemplate>
+
+    <!--Reset glyph button -->
+    <Style x:Key="ResetButton" TargetType="Button">
+      <Setter Property="Content" Value="&#x21BA;" />
+      <Setter Property="ToolTip" Value="Reset to default" />
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="Width" Value="28" />
+      <Setter Property="Height" Value="28" />
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="8" Padding="20,8">
+            <Border x:Name="bg" Background="Transparent" CornerRadius="6">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="bg" Property="Background" Value="{StaticResource Hover}" />
+                <Setter Property="Foreground" Value="{StaticResource Text}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!--Bordered button (secondary) -->
+    <Style x:Key="OutlineButton" TargetType="Button">
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="bg" Background="{StaticResource Segment}" BorderBrush="{StaticResource SegmentBorder}"
+                    BorderThickness="1" CornerRadius="7" Padding="14,7">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="bg" Property="BorderBrush" Value="{StaticResource Accent}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource OutlineButton}">
+      <Setter Property="Foreground" Value="#F87171" />
+    </Style>
+
+    <!-- Dark single-line text input -->
+    <Style x:Key="InputBox" TargetType="TextBox">
+      <Setter Property="Background" Value="{StaticResource Segment}" />
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="CaretBrush" Value="{StaticResource Text}" />
+      <Setter Property="BorderBrush" Value="{StaticResource SegmentBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="9,7" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="AccentButton" TargetType="Button">
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="bg" Background="{StaticResource Accent}" CornerRadius="7" Padding="20,8">
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
             <ControlTemplate.Triggers>
@@ -86,77 +287,17 @@
       </Setter>
     </Style>
 
-    <Style x:Key="SectionLabel" TargetType="TextBlock">
-      <Setter Property="Foreground" Value="{StaticResource Muted}" />
-      <Setter Property="FontSize" Value="12" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Margin" Value="2,0,0,6" />
-    </Style>
-
-    <!-- Compact color dropdown: a swatch + name per item -->
-    <DataTemplate x:Key="ColorItem">
-      <StackPanel Orientation="Horizontal">
-        <Border Width="16" Height="16" CornerRadius="4" Background="{Binding Brush}"
-                BorderBrush="{StaticResource SegmentBorder}" BorderThickness="1" VerticalAlignment="Center" />
-        <TextBlock Text="{Binding Name}" Foreground="{StaticResource Text}" Margin="8,0,0,0" VerticalAlignment="Center" />
-      </StackPanel>
-    </DataTemplate>
-
-    <Style x:Key="ColorCombo" TargetType="ComboBox">
-      <Setter Property="ItemsSource" Value="{x:Static local:Palette.Colors}" />
-      <Setter Property="SelectedValuePath" Value="Hex" />
-      <Setter Property="ItemTemplate" Value="{StaticResource ColorItem}" />
-      <Setter Property="Width" Value="128" />
-      <Setter Property="Padding" Value="8,3" />
-      <Setter Property="Cursor" Value="Hand" />
-    </Style>
-
-    <!-- Small reset glyph button next to each shortcut -->
-    <Style x:Key="ResetButton" TargetType="Button">
-      <Setter Property="Content" Value="&#x21BA;" />
-      <Setter Property="ToolTip" Value="Reset to default" />
-      <Setter Property="Foreground" Value="{StaticResource Muted}" />
-      <Setter Property="Cursor" Value="Hand" />
-      <Setter Property="FontSize" Value="15" />
-      <Setter Property="Width" Value="26" />
-      <Setter Property="Height" Value="26" />
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="Button">
-            <Border x:Name="bg" Background="Transparent" CornerRadius="6">
-              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-            </Border>
-            <ControlTemplate.Triggers>
-              <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="bg" Property="Background" Value="#E3E6EA" />
-                <Setter Property="Foreground" Value="{StaticResource Text}" />
-              </Trigger>
-            </ControlTemplate.Triggers>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-    </Style>
-
-    <Style x:Key="KeyCap" TargetType="Border">
-      <Setter Property="Background" Value="White" />
-      <Setter Property="BorderBrush" Value="{StaticResource SegmentBorder}" />
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="5" />
-      <Setter Property="Padding" Value="9,3" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-    </Style>
-
-    <!-- Click-to-record shortcut field -->
+    <!--Shortcut recorder -->
     <Style TargetType="views:ShortcutRecorder">
       <Setter Property="Foreground" Value="{StaticResource Text}" />
       <Setter Property="Cursor" Value="Hand" />
-      <Setter Property="MinWidth" Value="128" />
+      <Setter Property="MinWidth" Value="140" />
       <Setter Property="HorizontalContentAlignment" Value="Center" />
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="views:ShortcutRecorder">
-            <Border x:Name="box" Background="White" BorderBrush="{StaticResource SegmentBorder}"
-                    BorderThickness="1" CornerRadius="6" Padding="10,5">
+            <Border x:Name="box" Background="{StaticResource Segment}" BorderBrush="{StaticResource SegmentBorder}"
+                    BorderThickness="1" CornerRadius="7" Padding="10,6">
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
             <ControlTemplate.Triggers>
@@ -165,7 +306,7 @@
               </Trigger>
               <Trigger Property="IsKeyboardFocused" Value="True">
                 <Setter TargetName="box" Property="BorderBrush" Value="{StaticResource Accent}" />
-                <Setter TargetName="box" Property="Background" Value="#EAF1FE" />
+                <Setter TargetName="box" Property="Background" Value="#1E3358" />
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -173,28 +314,51 @@
       </Setter>
     </Style>
 
-    <SolidColorBrush x:Key="TrackOff" Color="#D1D5DB" />
-
-    <!-- Pill toggle switch (templated CheckBox so IsChecked bindings are unchanged) -->
-    <Style x:Key="ToggleSwitch" TargetType="CheckBox">
-      <Setter Property="Foreground" Value="{StaticResource Text}" />
+    <!--Pill toggle switch (no inline content; label sits in the row) -->
+    <Style x:Key="Switch" TargetType="CheckBox">
       <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="CheckBox">
-            <StackPanel Orientation="Horizontal" Background="Transparent">
-              <Border x:Name="track" Width="42" Height="24" CornerRadius="12"
-                      Background="{StaticResource TrackOff}" VerticalAlignment="Center">
-                <Ellipse x:Name="thumb" Width="18" Height="18" Fill="White"
-                         HorizontalAlignment="Left" Margin="3,0,0,0" />
-              </Border>
-              <ContentPresenter VerticalAlignment="Center" Margin="12,0,0,0" />
-            </StackPanel>
+            <Border x:Name="track" Width="42" Height="24" CornerRadius="12"
+                    Background="{StaticResource TrackOff}">
+              <Ellipse x:Name="thumb" Width="18" Height="18" Fill="White"
+                       HorizontalAlignment="Left" Margin="3,0,0,0" />
+            </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsChecked" Value="True">
                 <Setter TargetName="track" Property="Background" Value="{StaticResource Accent}" />
                 <Setter TargetName="thumb" Property="HorizontalAlignment" Value="Right" />
                 <Setter TargetName="thumb" Property="Margin" Value="0,0,3,0" />
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.45" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!--Sidebar nav item -->
+    <Style x:Key="NavItem" TargetType="ListBoxItem">
+      <Setter Property="Foreground" Value="{StaticResource Text}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="Margin" Value="6,1" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ListBoxItem">
+            <Border x:Name="bg" Background="Transparent" CornerRadius="7" Padding="{TemplateBinding Padding}">
+              <ContentPresenter VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="bg" Property="Background" Value="{StaticResource Hover}" />
+              </Trigger>
+              <Trigger Property="IsSelected" Value="True">
+                <Setter TargetName="bg" Property="Background" Value="{StaticResource Accent}" />
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -203,97 +367,411 @@
     </Style>
   </Window.Resources>
 
-  <StackPanel Margin="24,22">
-    <TextBlock Text="ClickLight" FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource Text}" />
-    <TextBlock Text="Highlight your mouse clicks on screen."
-               Foreground="{StaticResource Muted}" Margin="0,2,0,20" />
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="204" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
 
-    <TextBlock Text="PULSE SIZE" Style="{StaticResource SectionLabel}" />
-    <ListBox Style="{StaticResource Segmented}"
-             ItemsSource="{x:Static local:Presets.Sizes}"
-             DisplayMemberPath="Title" SelectedValuePath="Value"
-             SelectedValue="{Binding BaseDiameterDips, Mode=TwoWay}"
-             Margin="0,0,0,20" />
-
-    <TextBlock Text="PULSE DURATION" Style="{StaticResource SectionLabel}" />
-    <ListBox Style="{StaticResource Segmented}"
-             ItemsSource="{x:Static local:Presets.Durations}"
-             DisplayMemberPath="Title" SelectedValuePath="Value"
-             SelectedValue="{Binding PulseDurationMs, Mode=TwoWay}"
-             Margin="0,0,0,20" />
-
-    <TextBlock Text="COLORS" Style="{StaticResource SectionLabel}" />
-    <Grid Margin="0,0,0,20">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-      </Grid.ColumnDefinitions>
+    <!-- ============ Sidebar ============ -->
+    <Grid Grid.Column="0" Background="{StaticResource SidebarBg}">
       <Grid.RowDefinitions>
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
-      <TextBlock Grid.Row="0" Grid.Column="0" Text="Left click" Foreground="{StaticResource Text}" VerticalAlignment="Center" Margin="0,0,0,6" />
-      <ComboBox Grid.Row="0" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding LeftColorHex, Mode=TwoWay}" Margin="0,0,0,6" />
-      <TextBlock Grid.Row="1" Grid.Column="0" Text="Right click" Foreground="{StaticResource Text}" VerticalAlignment="Center" Margin="0,0,0,6" />
-      <ComboBox Grid.Row="1" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding RightColorHex, Mode=TwoWay}" Margin="0,0,0,6" />
-      <TextBlock Grid.Row="2" Grid.Column="0" Text="Middle click" Foreground="{StaticResource Text}" VerticalAlignment="Center" Margin="0,0,0,6" />
-      <ComboBox Grid.Row="2" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding MiddleColorHex, Mode=TwoWay}" Margin="0,0,0,6" />
-      <TextBlock Grid.Row="3" Grid.Column="0" Text="Annotations" Foreground="{StaticResource Text}" VerticalAlignment="Center" />
-      <ComboBox Grid.Row="3" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding AnnotationColorHex, Mode=TwoWay}" />
+
+      <ListBox x:Name="Nav" Grid.Row="0" Background="Transparent" BorderThickness="0"
+               Margin="0,10,0,0" ItemContainerStyle="{StaticResource NavItem}"
+               SelectionChanged="OnNavChanged">
+        <ListBoxItem>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE713;" FontFamily="{StaticResource Icons}" FontSize="15" VerticalAlignment="Center" Width="24" />
+            <TextBlock Text="General" FontSize="13" VerticalAlignment="Center" />
+          </StackPanel>
+        </ListBoxItem>
+        <ListBoxItem>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE890;" FontFamily="{StaticResource Icons}" FontSize="15" VerticalAlignment="Center" Width="24" />
+            <TextBlock Text="Event Visibility" FontSize="13" VerticalAlignment="Center" />
+          </StackPanel>
+        </ListBoxItem>
+        <ListBoxItem>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE790;" FontFamily="{StaticResource Icons}" FontSize="15" VerticalAlignment="Center" Width="24" />
+            <TextBlock Text="Visual Style" FontSize="13" VerticalAlignment="Center" />
+          </StackPanel>
+        </ListBoxItem>
+        <ListBoxItem>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE765;" FontFamily="{StaticResource Icons}" FontSize="15" VerticalAlignment="Center" Width="24" />
+            <TextBlock Text="Keyboard Shortcuts" FontSize="13" VerticalAlignment="Center" />
+          </StackPanel>
+        </ListBoxItem>
+        <ListBoxItem>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE8FD;" FontFamily="{StaticResource Icons}" FontSize="15" VerticalAlignment="Center" Width="24" />
+            <TextBlock Text="Profiles" FontSize="13" VerticalAlignment="Center" />
+          </StackPanel>
+        </ListBoxItem>
+        <ListBoxItem>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE9D9;" FontFamily="{StaticResource Icons}" FontSize="15" VerticalAlignment="Center" Width="24" />
+            <TextBlock Text="Activity" FontSize="13" VerticalAlignment="Center" />
+          </StackPanel>
+        </ListBoxItem>
+        <ListBoxItem>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE700;" FontFamily="{StaticResource Icons}" FontSize="15" VerticalAlignment="Center" Width="24" />
+            <TextBlock Text="Menu Layout" FontSize="13" VerticalAlignment="Center" />
+          </StackPanel>
+        </ListBoxItem>
+      </ListBox>
+
+      <Border Grid.Row="1" Height="1" Background="{StaticResource CardBorder}" Margin="12,0" />
+
+      <!-- Live, interactive Preview Pad: click and drag inside it to see real pulses -->
+      <StackPanel Grid.Row="2" Margin="12">
+        <TextBlock Text="&#xE7C9;  Preview Pad" FontFamily="Segoe UI" Foreground="{StaticResource Muted}"
+                   FontSize="12" FontWeight="SemiBold" Margin="0,0,0,6" />
+        <Border Height="116" CornerRadius="8" ClipToBounds="True"
+                BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
+                ToolTip="Click and drag here to preview">
+          <views:PreviewPad />
+        </Border>
+        <Button Content="Randomize" Style="{StaticResource OutlineButton}" Margin="0,8,0,0"
+                HorizontalAlignment="Stretch" Click="OnRandomize" />
+      </StackPanel>
     </Grid>
 
-    <CheckBox Content="Show drag trail" IsChecked="{Binding ShowDrag}"
-              Style="{StaticResource ToggleSwitch}" Margin="2,0,0,14" />
+    <!-- ============ Content ============ -->
+    <Grid Grid.Column="1" Background="{StaticResource WindowBg}">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+      <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+      <Grid Margin="28,24">
 
-    <CheckBox Content="Show release ring (on hold + release)" IsChecked="{Binding ShowRelease}"
-              Style="{StaticResource ToggleSwitch}" Margin="2,0,0,14" />
+        <!-- ===== General ===== -->
+        <StackPanel x:Name="PaneGeneral">
+          <Image Source="/Assets/clicklight-logo.png" Height="52" HorizontalAlignment="Left"
+                 RenderOptions.BitmapScalingMode="HighQuality" Margin="0,0,0,20" />
+          <TextBlock Text="General" Style="{StaticResource PaneTitle}" />
+          <TextBlock Text="Enable ClickLight and reset to defaults." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
 
-    <CheckBox Content="Laser pointer (glowing cursor + drag stroke)" IsChecked="{Binding ShowLaserPointer}"
-              Style="{StaticResource ToggleSwitch}" Margin="2,0,0,14" />
+          <Border Style="{StaticResource CardBox}">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                <TextBlock Text="Enable ClickLight" Style="{StaticResource RowTitle}" />
+                <TextBlock Text="Show pulse highlights on every click." Style="{StaticResource RowSub}" />
+              </StackPanel>
+              <CheckBox Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding Enabled}" />
+            </Grid>
+          </Border>
 
-    <CheckBox Content="Annotations (Ctrl+Shift + drag)" IsChecked="{Binding EnableAnnotations}"
-              Style="{StaticResource ToggleSwitch}" Margin="2,0,0,14" />
+          <Border Style="{StaticResource CardBox}">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                <TextBlock Text="Reset to Defaults" Style="{StaticResource RowTitle}" />
+                <TextBlock Text="Restore size, duration, colors, and visibility toggles." Style="{StaticResource RowSub}" />
+              </StackPanel>
+              <Button Grid.Column="1" Content="Reset" Style="{StaticResource DangerButton}" VerticalAlignment="Center" Click="OnResetDefaults" />
+            </Grid>
+          </Border>
+        </StackPanel>
 
-    <CheckBox Content="Show keyboard shortcuts (modifier combos only)" IsChecked="{Binding ShowShortcuts}"
-              Style="{StaticResource ToggleSwitch}" Margin="2,0,0,20" />
+        <!-- ===== Event Visibility ===== -->
+        <StackPanel x:Name="PaneEvents" Visibility="Collapsed">
+          <TextBlock Text="Event Visibility" Style="{StaticResource PaneTitle}" />
+          <TextBlock Text="Choose which interactions and shortcut overlays appear." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
 
-    <Border Background="{StaticResource Segment}" CornerRadius="8" Padding="14,12" Margin="0,0,0,20">
-      <StackPanel>
-        <TextBlock Text="SHORTCUTS" Style="{StaticResource SectionLabel}" Margin="0,0,0,8" />
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-          </Grid.RowDefinitions>
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Toggle ClickLight" Foreground="{StaticResource Text}"
-                     VerticalAlignment="Center" Margin="0,0,0,6" />
-          <views:ShortcutRecorder Grid.Row="0" Grid.Column="1" Binding="{Binding ToggleHotKey, Mode=TwoWay}" Margin="0,0,0,6" />
-          <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="toggle" Click="OnResetShortcut" Margin="4,0,0,6" />
-          <TextBlock Grid.Row="1" Grid.Column="0" Text="Clear annotations" Foreground="{StaticResource Text}"
-                     VerticalAlignment="Center" Margin="0,0,0,6" />
-          <views:ShortcutRecorder Grid.Row="1" Grid.Column="1" Binding="{Binding ClearHotKey, Mode=TwoWay}" Margin="0,0,0,6" />
-          <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="clear" Click="OnResetShortcut" Margin="4,0,0,6" />
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Drawing mode" Foreground="{StaticResource Text}"
-                     VerticalAlignment="Center" />
-          <views:ShortcutRecorder Grid.Row="2" Grid.Column="1" Binding="{Binding DrawModeHotKey, Mode=TwoWay}" />
-          <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="draw" Click="OnResetShortcut" Margin="4,0,0,0" />
-        </Grid>
-        <TextBlock Foreground="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
-                   Text="Click a field and press a new combination (needs Ctrl, Alt or Win). Esc cancels." />
-        <TextBlock Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"
-                   Text="Fixed gestures: Ctrl+Shift + left-drag = arrow, right-drag = box" />
-      </StackPanel>
-    </Border>
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                  <TextBlock Text="Laser Pointer Mode" Style="{StaticResource RowTitle}" />
+                  <TextBlock Text="Show a glowing cursor that trails the pointer." Style="{StaticResource RowSub}" />
+                </StackPanel>
+                <CheckBox Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding ShowLaserPointer}" />
+              </Grid>
+              <Border Style="{StaticResource RowDivider}" />
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                  <TextBlock Text="Annotations" Style="{StaticResource RowTitle}" />
+                  <TextBlock Text="Ctrl+Shift + drag to draw an arrow (left) or box (right)." Style="{StaticResource RowSub}" />
+                </StackPanel>
+                <CheckBox Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding EnableAnnotations}" />
+              </Grid>
+              <Border Style="{StaticResource RowDivider}" />
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                  <TextBlock Text="Show Release Ring" Style="{StaticResource RowTitle}" />
+                  <TextBlock Text="A contracting ring when a held button is released." Style="{StaticResource RowSub}" />
+                </StackPanel>
+                <CheckBox Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding ShowRelease}" />
+              </Grid>
+              <Border Style="{StaticResource RowDivider}" />
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                  <TextBlock Text="Show Drag Trail" Style="{StaticResource RowTitle}" />
+                  <TextBlock Text="Trail dots that follow the cursor while dragging." Style="{StaticResource RowSub}" />
+                </StackPanel>
+                <CheckBox Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding ShowDrag}" />
+              </Grid>
+              <Border Style="{StaticResource RowDivider}" />
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                  <TextBlock Text="Show Keyboard Shortcuts" Style="{StaticResource RowTitle}" />
+                  <TextBlock Text="Display modifier combinations as key-cap pills." Style="{StaticResource RowSub}" />
+                </StackPanel>
+                <CheckBox Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding ShowShortcuts}" />
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
 
-    <Button Content="Close" Style="{StaticResource AccentButton}"
-            HorizontalAlignment="Right" IsCancel="True" Click="OnCloseClick" />
-  </StackPanel>
+        <!-- ===== Visual Style ===== -->
+        <StackPanel x:Name="PaneStyle" Visibility="Collapsed">
+          <TextBlock Text="Visual Style" Style="{StaticResource PaneTitle}" />
+          <TextBlock Text="Size, duration, and color of click pulses." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Size" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="How large the click pulse appears." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <ListBox Style="{StaticResource Segmented}" ItemsSource="{x:Static local:Presets.Sizes}"
+                       DisplayMemberPath="Title" SelectedValuePath="Value"
+                       SelectedValue="{Binding BaseDiameterDips, Mode=TwoWay}" />
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Duration" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="How long each pulse stays visible." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <ListBox Style="{StaticResource Segmented}" ItemsSource="{x:Static local:Presets.Durations}"
+                       DisplayMemberPath="Title" SelectedValuePath="Value"
+                       SelectedValue="{Binding PulseDurationMs, Mode=TwoWay}" />
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Colors" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Tint applied to each click type." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Left click" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
+                <ComboBox Grid.Row="0" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding LeftColorHex, Mode=TwoWay}" Margin="0,0,0,8" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Right click" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
+                <ComboBox Grid.Row="1" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding RightColorHex, Mode=TwoWay}" Margin="0,0,0,8" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Middle click" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
+                <ComboBox Grid.Row="2" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding MiddleColorHex, Mode=TwoWay}" Margin="0,0,0,8" />
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Annotations" Style="{StaticResource RowTitle}" />
+                <ComboBox Grid.Row="3" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding AnnotationColorHex, Mode=TwoWay}" />
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- ===== Keyboard Shortcuts ===== -->
+        <StackPanel x:Name="PaneShortcuts" Visibility="Collapsed">
+          <TextBlock Text="Keyboard Shortcuts" Style="{StaticResource PaneTitle}" />
+          <TextBlock Text="Set global shortcuts." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Global Shortcuts" Style="{StaticResource CardTitle}" Margin="0,0,0,12" />
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Toggle ClickLight" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
+                <views:ShortcutRecorder Grid.Row="0" Grid.Column="1" Binding="{Binding ToggleHotKey, Mode=TwoWay}" Margin="0,0,0,8" />
+                <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="toggle" Click="OnResetShortcut" Margin="4,0,0,8" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Clear annotations" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
+                <views:ShortcutRecorder Grid.Row="1" Grid.Column="1" Binding="{Binding ClearHotKey, Mode=TwoWay}" Margin="0,0,0,8" />
+                <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="clear" Click="OnResetShortcut" Margin="4,0,0,8" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Drawing mode" Style="{StaticResource RowTitle}" />
+                <views:ShortcutRecorder Grid.Row="2" Grid.Column="1" Binding="{Binding DrawModeHotKey, Mode=TwoWay}" />
+                <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="draw" Click="OnResetShortcut" />
+              </Grid>
+              <TextBlock Foreground="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap" Margin="0,12,0,0"
+                         Text="Click a field and press a new combination (needs Ctrl, Alt or Win). Esc cancels." />
+              <TextBlock Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"
+                         Text="Fixed gestures: Ctrl+Shift + left-drag = arrow, right-drag = box." />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- ===== Profiles ===== -->
+        <StackPanel x:Name="PaneProfiles" Visibility="Collapsed">
+          <TextBlock Text="Profiles" Style="{StaticResource PaneTitle}" />
+          <TextBlock Text="Save and reuse visual setups. Profiles do not include shortcuts." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Current Profile" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Switch profiles to load a saved look. Changes preview here and apply on OK." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <ComboBox x:Name="ProfileCombo" Grid.Column="0" ItemTemplate="{StaticResource ProfileItem}"
+                          Style="{StaticResource DarkCombo}" SelectionChanged="OnProfileSelected" />
+                <Button x:Name="SaveChangesButton" Grid.Column="1" Content="Save changes" Style="{StaticResource OutlineButton}"
+                        Margin="10,0,0,0" Click="OnSaveChanges" />
+                <Button x:Name="DeleteProfileButton" Grid.Column="2" Content="Delete" Style="{StaticResource DangerButton}"
+                        Margin="8,0,0,0" Click="OnDeleteProfile" />
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="New Profile" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Save the current look as a new profile." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBox x:Name="NewProfileName" Grid.Column="0" Style="{StaticResource InputBox}" Margin="0,0,10,0" />
+                <Button Grid.Column="1" Content="Create" Style="{StaticResource AccentButton}" Click="OnCreateProfile" />
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Import and Export" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Move profiles between machines as a JSON file." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <StackPanel Orientation="Horizontal">
+                <Button Content="Export..." Style="{StaticResource OutlineButton}" Click="OnExportProfiles" Margin="0,0,10,0" />
+                <Button Content="Import..." Style="{StaticResource OutlineButton}" Click="OnImportProfiles" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <TextBlock x:Name="ProfileStatus" Style="{StaticResource RowSub}" Visibility="Collapsed" />
+        </StackPanel>
+
+        <!-- ===== Activity ===== -->
+        <StackPanel x:Name="PaneActivity" Visibility="Collapsed">
+          <TextBlock Text="Activity" Style="{StaticResource PaneTitle}" />
+          <TextBlock Text="A local, on-device view of your clicking." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Daily Clicks" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Your last seven days. Stored only on this PC." Style="{StaticResource CardSubtitle}" Margin="0,0,0,10" />
+              <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="TodayTotal" Text="0" Foreground="{StaticResource Text}" FontSize="30" FontWeight="SemiBold" VerticalAlignment="Bottom" />
+                <TextBlock Text="clicks today" Foreground="{StaticResource Muted}" FontSize="13" VerticalAlignment="Bottom" Margin="8,0,0,5" />
+              </StackPanel>
+              <UniformGrid x:Name="ActivityChart" Rows="1" Height="150" Margin="0,14,0,0" />
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Today" Style="{StaticResource CardTitle}" Margin="0,0,0,12" />
+              <UniformGrid Rows="1" Columns="4">
+                <StackPanel>
+                  <TextBlock x:Name="MetricLeft" Text="0" Foreground="{StaticResource Text}" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                  <TextBlock Text="Left" Foreground="{StaticResource Muted}" FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock x:Name="MetricRight" Text="0" Foreground="{StaticResource Text}" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                  <TextBlock Text="Right" Foreground="{StaticResource Muted}" FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock x:Name="MetricMiddle" Text="0" Foreground="{StaticResource Text}" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                  <TextBlock Text="Middle" Foreground="{StaticResource Muted}" FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock x:Name="MetricDrags" Text="0" Foreground="{StaticResource Text}" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                  <TextBlock Text="Drags" Foreground="{StaticResource Muted}" FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                </StackPanel>
+              </UniformGrid>
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <Grid>
+              <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+              <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                <TextBlock Text="Reset Activity History" Style="{StaticResource RowTitle}" />
+                <TextBlock Text="Remove all click counts stored on this PC." Style="{StaticResource RowSub}" />
+              </StackPanel>
+              <Button Grid.Column="1" Content="Reset" Style="{StaticResource DangerButton}" VerticalAlignment="Center" Click="OnResetActivity" />
+            </Grid>
+          </Border>
+
+          <TextBlock x:Name="ActivityStatus" Style="{StaticResource RowSub}" Visibility="Collapsed" />
+        </StackPanel>
+
+        <!-- ===== Menu Layout ===== -->
+        <StackPanel x:Name="PaneMenu" Visibility="Collapsed">
+          <TextBlock Text="Menu Layout" Style="{StaticResource PaneTitle}" />
+          <TextBlock Text="Choose which tray-menu items appear and drag to reorder them." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Tray Menu Items" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Turn items off to hide them. Drag the handle to reorder. Quit is always shown." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <ItemsControl x:Name="MenuList" ItemsSource="{Binding MenuLayout}" AllowDrop="True"
+                            PreviewMouseLeftButtonDown="OnMenuItemPreviewDown"
+                            PreviewMouseMove="OnMenuItemPreviewMove"
+                            Drop="OnMenuItemDrop">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border Background="{StaticResource Segment}" BorderBrush="{StaticResource SegmentBorder}"
+                            BorderThickness="1" CornerRadius="7" Padding="10,7" Margin="0,3">
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="&#x2261;" Foreground="{StaticResource Muted}" FontSize="17"
+                                   VerticalAlignment="Center" Margin="0,0,12,0" Cursor="SizeAll" ToolTip="Drag to reorder" />
+                        <CheckBox Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding Visible}"
+                                  IsEnabled="{Binding CanHide}" Margin="0,0,14,0" />
+                        <TextBlock Grid.Column="2" Text="{Binding Label}" Style="{StaticResource RowTitle}" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+      </Grid>
+      </ScrollViewer>
+
+      <!-- Footer: commit or discard the draft -->
+      <Border Grid.Row="1" Background="{StaticResource SidebarBg}" BorderBrush="{StaticResource CardBorder}"
+              BorderThickness="0,1,0,0" Padding="20,12">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <Button Content="Cancel" Style="{StaticResource OutlineButton}" MinWidth="90" Margin="0,0,10,0"
+                  IsCancel="True" Click="OnCancel" />
+          <Button Content="OK" Style="{StaticResource AccentButton}" MinWidth="90" Click="OnOk" />
+        </StackPanel>
+      </Border>
+    </Grid>
+  </Grid>
 </Window>
