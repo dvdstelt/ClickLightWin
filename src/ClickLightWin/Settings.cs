@@ -106,6 +106,39 @@ public sealed class Settings : INotifyPropertyChanged
     [JsonIgnore] public Duration ShortcutFade => new(TimeSpan.FromMilliseconds(350));
     [JsonIgnore] public int ShortcutStackMax => 6;
 
+    /// <summary>A detached copy of the user-editable settings, for editing in a draft.</summary>
+    public Settings Clone()
+    {
+        var copy = new Settings();
+        copy.CopyFrom(this);
+        return copy;
+    }
+
+    /// <summary>
+    /// Copy all persisted, user-editable values from <paramref name="other"/> into this
+    /// instance through the setters, so bindings, overlays, and hotkeys react. Used to
+    /// commit a settings-window draft back onto the live settings.
+    /// </summary>
+    public void CopyFrom(Settings other)
+    {
+        SchemaVersion = other.SchemaVersion;
+        Enabled = other.Enabled;
+        ShowDrag = other.ShowDrag;
+        ShowRelease = other.ShowRelease;
+        ShowLaserPointer = other.ShowLaserPointer;
+        EnableAnnotations = other.EnableAnnotations;
+        ShowShortcuts = other.ShowShortcuts;
+        BaseDiameterDips = other.BaseDiameterDips;
+        PulseDurationMs = other.PulseDurationMs;
+        LeftColorHex = other.LeftColorHex;
+        RightColorHex = other.RightColorHex;
+        MiddleColorHex = other.MiddleColorHex;
+        AnnotationColorHex = other.AnnotationColorHex;
+        ToggleHotKey = other.ToggleHotKey;
+        ClearHotKey = other.ClearHotKey;
+        DrawModeHotKey = other.DrawModeHotKey;
+    }
+
     public Color ColorFor(ClickButton button) => ParseHex(button switch
     {
         ClickButton.Left => _leftColorHex,

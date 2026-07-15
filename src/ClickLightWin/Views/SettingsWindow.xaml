@@ -352,14 +352,14 @@
 
       <Border Grid.Row="1" Height="1" Background="{StaticResource CardBorder}" Margin="12,0" />
 
-      <!-- Preview Pad (placeholder in Phase 1; live rendering comes next) -->
+      <!-- Live, interactive Preview Pad: click and drag inside it to see real pulses -->
       <StackPanel Grid.Row="2" Margin="12">
         <TextBlock Text="&#xE7C9;  Preview Pad" FontFamily="Segoe UI" Foreground="{StaticResource Muted}"
                    FontSize="12" FontWeight="SemiBold" Margin="0,0,0,6" />
-        <Border Height="116" CornerRadius="8" Background="#151517"
-                BorderBrush="{StaticResource CardBorder}" BorderThickness="1">
-          <TextBlock Text="Live preview coming soon" Foreground="{StaticResource Muted}" FontSize="11"
-                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <Border Height="116" CornerRadius="8" ClipToBounds="True"
+                BorderBrush="{StaticResource CardBorder}" BorderThickness="1"
+                ToolTip="Click and drag here to preview">
+          <views:PreviewPad />
         </Border>
         <Button Content="Randomize" Style="{StaticResource OutlineButton}" Margin="0,8,0,0"
                 HorizontalAlignment="Stretch" Click="OnRandomize" />
@@ -367,7 +367,12 @@
     </Grid>
 
     <!-- ============ Content ============ -->
-    <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Background="{StaticResource WindowBg}">
+    <Grid Grid.Column="1" Background="{StaticResource WindowBg}">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+      <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
       <Grid Margin="28,24">
 
         <!-- ===== General ===== -->
@@ -564,6 +569,17 @@
         </StackPanel>
 
       </Grid>
-    </ScrollViewer>
+      </ScrollViewer>
+
+      <!-- Footer: commit or discard the draft -->
+      <Border Grid.Row="1" Background="{StaticResource SidebarBg}" BorderBrush="{StaticResource CardBorder}"
+              BorderThickness="0,1,0,0" Padding="20,12">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <Button Content="Cancel" Style="{StaticResource OutlineButton}" MinWidth="90" Margin="0,0,10,0"
+                  IsCancel="True" Click="OnCancel" />
+          <Button Content="OK" Style="{StaticResource AccentButton}" MinWidth="90" Click="OnOk" />
+        </StackPanel>
+      </Border>
+    </Grid>
   </Grid>
 </Window>

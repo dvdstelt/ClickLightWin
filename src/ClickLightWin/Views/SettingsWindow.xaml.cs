@@ -15,6 +15,9 @@ public partial class SettingsWindow : Window
     private readonly StackPanel[] _panes;
     private readonly Random _rng = new();
 
+    /// <summary>True when the user closed with OK; the caller then applies the draft.</summary>
+    public bool Committed { get; private set; }
+
     public SettingsWindow(Settings settings)
     {
         InitializeComponent();
@@ -22,6 +25,14 @@ public partial class SettingsWindow : Window
         _panes = [PaneGeneral, PaneEvents, PaneStyle, PaneShortcuts, PaneProfiles, PaneActivity, PaneMenu];
         Nav.SelectedIndex = 0;
     }
+
+    private void OnOk(object sender, RoutedEventArgs e)
+    {
+        Committed = true;
+        Close();
+    }
+
+    private void OnCancel(object sender, RoutedEventArgs e) => Close();
 
     private void OnNavChanged(object sender, SelectionChangedEventArgs e)
     {
