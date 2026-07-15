@@ -27,18 +27,14 @@ public sealed class AppController : IDisposable
     public void Start()
     {
         _settings = _settingsStore.Load();
-        _hook.EmitMoves = LaserActive; // only track the move stream when the laser needs it
-        _hook.LaserStrokeEnabled = LaserActive;
+        _hook.EmitMoves = LaserActive; // only track the move stream when the laser glow needs it
         _hook.AnnotationsEnabled = AnnotationsActive;
-        // React to settings changes: the glow move stream and the Ctrl+drag laser
-        // stroke follow the laser (and Enabled); annotations follow their own toggle.
+        // React to settings changes: the glow move stream follows the laser (and
+        // Enabled); annotations follow their own toggle.
         _settings.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.ShowLaserPointer))
-            {
                 _hook.EmitMoves = LaserActive;
-                _hook.LaserStrokeEnabled = LaserActive;
-            }
             if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.EnableAnnotations))
                 _hook.AnnotationsEnabled = AnnotationsActive;
             if (e.PropertyName is nameof(Settings.Enabled) or nameof(Settings.ShowShortcuts))

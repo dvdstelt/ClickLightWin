@@ -15,7 +15,7 @@ app runs headless apart from a tray icon; there is no main window.
 - System-wide click capture via a low-level mouse hook
 - Transparent, click-through, topmost overlay per monitor, DPI-correct (Per-Monitor v2)
 - Fading pulse on press, a contracting ring on hold + release, and a fading drag trail
-- **Laser-pointer mode**: a glowing cursor that trails the pointer plus a fading freehand stroke on drag
+- **Laser-pointer mode**: a glowing cursor that trails the pointer during presentations
 - **Annotations**: hold Ctrl+Shift and drag — left-drag draws an arrow, right-drag a box; they persist until Ctrl+Shift+C clears them
 - **Live shortcut display**: shows keyboard shortcuts (Ctrl+C, Alt+Tab, …) as key-cap pills for screencasts — modifier combos only, off by default
 - Per-button and annotation colors, Size/Duration presets

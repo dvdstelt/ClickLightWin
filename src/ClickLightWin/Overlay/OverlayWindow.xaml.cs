@@ -41,39 +41,17 @@ public partial class OverlayWindow : Window
         _renderer.Spawn(ToLocal(click), click, settings);
     }
 
-    /// <summary>Drive the laser cursor/stroke for one event (physical pixels).</summary>
+    /// <summary>Move the laser cursor glow to follow the pointer (physical pixels).</summary>
     public void Laser(ClickEvent click, Settings settings)
     {
         _laser ??= new LaserRenderer(PulseCanvas, settings);
-        var local = ToLocal(click);
-        switch (click.Phase)
-        {
-            case ClickPhase.Down: _laser.BeginStroke(); break;
-            case ClickPhase.Move: _laser.UpdateCursor(local, settings); break;
-            case ClickPhase.Drag: _laser.UpdateCursor(local, settings); _laser.AppendPoint(local, settings); break;
-            case ClickPhase.Up: _laser.CompleteStroke(settings); break;
-        }
+        _laser.UpdateCursor(ToLocal(click), settings);
     }
 
     /// <summary>Drive an annotation gesture for one event (physical pixels).</summary>
     public void Annotate(AnnotationEvent evt, Settings settings)
     {
         var local = ToLocal(evt.ScreenX, evt.ScreenY);
-
-        // The laser stroke reuses the same Ctrl-drag gesture plumbing but renders
-        // as a temporary fading stroke via the laser renderer.
-        if (evt.Tool == AnnotationTool.LaserStroke)
-        {
-            _laser ??= new LaserRenderer(PulseCanvas, settings);
-            switch (evt.Phase)
-            {
-                case AnnotationPhase.Begin: _laser.BeginStroke(); break;
-                case AnnotationPhase.Update: _laser.UpdateCursor(local, settings); _laser.AppendPoint(local, settings); break;
-                case AnnotationPhase.Commit: _laser.CompleteStroke(settings); break;
-            }
-            return;
-        }
-
         _annotations ??= new AnnotationRenderer(PulseCanvas);
         switch (evt.Phase)
         {

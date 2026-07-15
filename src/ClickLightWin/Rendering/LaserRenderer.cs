@@ -12,11 +12,9 @@ using VerticalAlignment = System.Windows.VerticalAlignment;
 namespace ClickLightWin.Rendering;
 
 /// <summary>
-/// Draws the laser-pointer overlay on one monitor: a glowing halo that eases
-/// along just behind the cursor and fades after movement stops, plus a fading
-/// freehand stroke while a button is dragged. The stroke is drawn as three
-/// layered lines (wide soft glow, mid, thin near-white core) so it reads as a
-/// glowing red line with a bright center, matching ClickOverlayView.swift.
+/// Draws the laser-pointer cursor on one monitor: a glowing halo (concentric
+/// solid discs with a small bright center) that eases along just behind the
+/// cursor and fades after movement stops. Matches ClickOverlayView.swift.
 /// </summary>
 public sealed class LaserRenderer : IDisposable
 {
@@ -31,11 +29,6 @@ public sealed class LaserRenderer : IDisposable
     private Point _current;
     private bool _visible;
     private bool _rendering;
-
-    // Active stroke: three overlaid polylines sharing the same points.
-    private Canvas? _strokeLayer;
-    private Polyline[] _strokeLines = [];
-    private Point? _lastStrokePoint;
 
     public LaserRenderer(Canvas canvas, Settings settings)
     {
@@ -65,64 +58,6 @@ public sealed class LaserRenderer : IDisposable
         _idle.Stop();
         _idle.Start();
     }
-
-    public void BeginStroke()
-    {
-        _strokeLayer = null;
-        _strokeLines = [];
-        _lastStrokePoint = null;
-    }
-
-    public void AppendPoint(Point p, Settings settings)
-    {
-        var minSq = settings.LaserMinSpacingDips * settings.LaserMinSpacingDips;
-        if (_lastStrokePoint is { } last && Distance2(last, p) < minSq) return;
-
-        if (_strokeLayer is null)
-        {
-            _strokeLayer = new Canvas { IsHitTestVisible = false };
-            var mid = settings.LaserStrokeThickness;
-            _strokeLines =
-            [
-                MakeLine(settings.LaserColor, mid * 2.6, 0.28), // wide soft glow
-                MakeLine(settings.LaserColor, mid, 0.95),       // mid red
-                MakeLine(settings.LaserCoreColor, mid * 0.45, 1.0) // thin bright core
-            ];
-            foreach (var line in _strokeLines) _strokeLayer.Children.Add(line);
-            _canvas.Children.Add(_strokeLayer);
-        }
-
-        foreach (var line in _strokeLines) line.Points.Add(p);
-        _lastStrokePoint = p;
-    }
-
-    public void CompleteStroke(Settings settings)
-    {
-        if (_strokeLayer is null) return;
-        var layer = _strokeLayer;
-        _strokeLayer = null;
-        _strokeLines = [];
-        _lastStrokePoint = null;
-
-        var fade = new DoubleAnimation(1, 0, settings.LaserStrokeFade)
-        {
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
-        };
-        fade.Completed += (_, _) => _canvas.Children.Remove(layer);
-        layer.BeginAnimation(UIElement.OpacityProperty, fade);
-    }
-
-    private static Polyline MakeLine(Color color, double thickness, double opacity) => new()
-    {
-        Stroke = new SolidColorBrush(color),
-        StrokeThickness = thickness,
-        Opacity = opacity,
-        StrokeLineJoin = PenLineJoin.Round,
-        StrokeStartLineCap = PenLineCap.Round,
-        StrokeEndLineCap = PenLineCap.Round,
-        IsHitTestVisible = false,
-        Points = []
-    };
 
     private void EnsureRendering()
     {
@@ -210,11 +145,4 @@ public sealed class LaserRenderer : IDisposable
     }
 
     private static Color WithAlpha(Color c, double a) => Color.FromArgb((byte)(a * 255), c.R, c.G, c.B);
-
-    private static double Distance2(Point a, Point b)
-    {
-        var dx = a.X - b.X;
-        var dy = a.Y - b.Y;
-        return dx * dx + dy * dy;
-    }
 }

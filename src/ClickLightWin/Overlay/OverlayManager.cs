@@ -75,10 +75,7 @@ public sealed class OverlayManager : IDisposable
         _annotatingOverlay?.Annotate(evt, _settings);
         if (evt.Phase == AnnotationPhase.Commit)
         {
-            // Laser strokes are temporary (they fade), so they are not remembered
-            // for re-rendering after a display change like arrows and boxes are.
-            if (evt.Tool != AnnotationTool.LaserStroke
-                && _annotatingOverlay is not null && _annotationStart is { } start)
+            if (_annotatingOverlay is not null && _annotationStart is { } start)
                 _committed.Add(new(evt.Tool, start.X, start.Y, evt.ScreenX, evt.ScreenY));
             _annotatingOverlay = null;
             _annotationStart = null;
