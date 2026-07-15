@@ -27,6 +27,7 @@ public sealed class Settings : INotifyPropertyChanged
     private bool _showShortcuts = false;
     private double _baseDiameterDips = 32;  // Medium preset
     private double _pulseDurationMs = 480;  // Normal preset
+    private double _pulseIntensity = 1.0;   // Normal preset (matches the original look)
     private string _leftColorHex = "#3B82F6";   // blue
     private string _rightColorHex = "#F97316";  // orange
     private string _middleColorHex = "#22C55E"; // green
@@ -49,6 +50,7 @@ public sealed class Settings : INotifyPropertyChanged
     public bool ShowShortcuts { get => _showShortcuts; set => Set(ref _showShortcuts, value); }
     public double BaseDiameterDips { get => _baseDiameterDips; set => Set(ref _baseDiameterDips, value); }
     public double PulseDurationMs { get => _pulseDurationMs; set => Set(ref _pulseDurationMs, value); }
+    public double PulseIntensity { get => _pulseIntensity; set => Set(ref _pulseIntensity, value); }
     public string LeftColorHex { get => _leftColorHex; set => Set(ref _leftColorHex, value); }
     public string RightColorHex { get => _rightColorHex; set => Set(ref _rightColorHex, value); }
     public string MiddleColorHex { get => _middleColorHex; set => Set(ref _middleColorHex, value); }
@@ -138,6 +140,7 @@ public sealed class Settings : INotifyPropertyChanged
         ShowShortcuts = other.ShowShortcuts;
         BaseDiameterDips = other.BaseDiameterDips;
         PulseDurationMs = other.PulseDurationMs;
+        PulseIntensity = other.PulseIntensity;
         LeftColorHex = other.LeftColorHex;
         RightColorHex = other.RightColorHex;
         MiddleColorHex = other.MiddleColorHex;

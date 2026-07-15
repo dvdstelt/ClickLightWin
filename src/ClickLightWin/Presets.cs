@@ -25,4 +25,14 @@ public static class Presets
         new("Long", 720),
         new("Very Long", 1000)
     ];
+
+    // Pulse brightness multiplier. "Normal" (1.0) matches the original look; lower
+    // dims the pulse, higher fills it in more. Mirrors the macOS intensity presets.
+    public static readonly NumericPreset[] Intensities =
+    [
+        new("Subtle", 0.4),
+        new("Normal", 1.0),
+        new("Bright", 1.4),
+        new("Beacon", 1.8)
+    ];
 }

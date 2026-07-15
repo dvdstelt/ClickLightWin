@@ -14,6 +14,7 @@ public sealed class ClickProfile
 
     public double BaseDiameterDips { get; set; }
     public double PulseDurationMs { get; set; }
+    public double PulseIntensity { get; set; } = 1.0;
     public string LeftColorHex { get; set; } = "";
     public string RightColorHex { get; set; } = "";
     public string MiddleColorHex { get; set; } = "";
@@ -41,6 +42,7 @@ public sealed class ClickProfile
         CreatedUtc = nowUtc;
         BaseDiameterDips = s.BaseDiameterDips;
         PulseDurationMs = s.PulseDurationMs;
+        PulseIntensity = s.PulseIntensity;
         LeftColorHex = s.LeftColorHex;
         RightColorHex = s.RightColorHex;
         MiddleColorHex = s.MiddleColorHex;
@@ -57,6 +59,7 @@ public sealed class ClickProfile
     {
         s.BaseDiameterDips = BaseDiameterDips;
         s.PulseDurationMs = PulseDurationMs;
+        s.PulseIntensity = PulseIntensity;
         s.LeftColorHex = LeftColorHex;
         s.RightColorHex = RightColorHex;
         s.MiddleColorHex = MiddleColorHex;

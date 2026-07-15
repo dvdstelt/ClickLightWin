@@ -51,7 +51,7 @@ public sealed class PulseRenderer(Canvas canvas)
             Width = baseDiameter,
             Height = baseDiameter,
             Stroke = new SolidColorBrush(color),
-            StrokeThickness = settings.StrokeThickness * 0.7,
+            StrokeThickness = settings.StrokeThickness * 0.7 * Math.Clamp(settings.PulseIntensity, 0.4, 2.0),
             IsHitTestVisible = false,
             RenderTransformOrigin = new Point(0.5, 0.5)
         };
@@ -65,7 +65,7 @@ public sealed class PulseRenderer(Canvas canvas)
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
         // Contract inward (wide -> narrow) while fading out.
         var shrink = new DoubleAnimation(settings.ReleaseStartScale, settings.ReleaseEndScale, duration) { EasingFunction = ease };
-        var fade = new DoubleAnimation(0.9, 0, duration) { EasingFunction = ease };
+        var fade = new DoubleAnimation(0.9 * Math.Clamp(settings.PulseIntensity, 0, 1), 0, duration) { EasingFunction = ease };
         fade.Completed += (_, _) => canvas.Children.Remove(ring);
 
         scale.BeginAnimation(ScaleTransform.ScaleXProperty, shrink);
@@ -99,7 +99,7 @@ public sealed class PulseRenderer(Canvas canvas)
         canvas.Children.Add(dot);
 
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
-        var fade = new DoubleAnimation(0.85, 0, settings.DragDuration) { EasingFunction = ease };
+        var fade = new DoubleAnimation(0.85 * Math.Clamp(settings.PulseIntensity, 0, 1), 0, settings.DragDuration) { EasingFunction = ease };
         fade.Completed += (_, _) => canvas.Children.Remove(dot);
         dot.BeginAnimation(UIElement.OpacityProperty, fade);
     }
@@ -110,14 +110,17 @@ public sealed class PulseRenderer(Canvas canvas)
         var baseDiameter = settings.BaseDiameterDips;   // e.g. 28
         var maxScale = settings.MaxScale;               // e.g. 2.2
         var duration = settings.PulseDuration;          // e.g. 450ms
+        var intensity = settings.PulseIntensity;        // brightness multiplier (Normal = 1)
 
         var ring = new Ellipse
         {
             Width = baseDiameter,
             Height = baseDiameter,
             Stroke = new SolidColorBrush(color),
-            StrokeThickness = settings.StrokeThickness, // e.g. 3
-            Fill = new SolidColorBrush(Color.FromArgb(60, color.R, color.G, color.B)),
+            // Intensity boldens the ring: thicker outline and a fuller tint at higher
+            // levels (opacity is already at its ceiling, so weight carries the range).
+            StrokeThickness = settings.StrokeThickness * Math.Clamp(intensity, 0.4, 2.0),
+            Fill = new SolidColorBrush(Color.FromArgb((byte)Math.Clamp(75 * intensity, 0, 220), color.R, color.G, color.B)),
             IsHitTestVisible = false,
             RenderTransformOrigin = new Point(0.5, 0.5)
         };
@@ -132,7 +135,7 @@ public sealed class PulseRenderer(Canvas canvas)
 
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
         var grow = new DoubleAnimation(1, maxScale, duration) { EasingFunction = ease };
-        var fade = new DoubleAnimation(1, 0, duration) { EasingFunction = ease };
+        var fade = new DoubleAnimation(Math.Clamp(intensity, 0, 1), 0, duration) { EasingFunction = ease };
         fade.Completed += (_, _) => canvas.Children.Remove(ring);
 
         scale.BeginAnimation(ScaleTransform.ScaleXProperty, grow);

@@ -561,6 +561,16 @@
 
           <Border Style="{StaticResource CardBox}">
             <StackPanel>
+              <TextBlock Text="Intensity" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="How bright the click pulse appears." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <ListBox Style="{StaticResource Segmented}" ItemsSource="{x:Static local:Presets.Intensities}"
+                       DisplayMemberPath="Title" SelectedValuePath="Value"
+                       SelectedValue="{Binding PulseIntensity, Mode=TwoWay}" />
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
               <TextBlock Text="Duration" Style="{StaticResource CardTitle}" />
               <TextBlock Text="How long each pulse stays visible." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
               <ListBox Style="{StaticResource Segmented}" ItemsSource="{x:Static local:Presets.Durations}"
