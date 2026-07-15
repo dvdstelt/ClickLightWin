@@ -4,6 +4,7 @@
         xmlns:local="clr-namespace:ClickLightWin"
         xmlns:views="clr-namespace:ClickLightWin.Views"
         Title="ClickLight Settings"
+        Icon="/Assets/icon.ico"
         Width="900" Height="580" MinWidth="820" MinHeight="480"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="True"
@@ -454,6 +455,8 @@
 
         <!-- ===== General ===== -->
         <StackPanel x:Name="PaneGeneral">
+          <Image Source="/Assets/clicklight-logo.png" Height="52" HorizontalAlignment="Left"
+                 RenderOptions.BitmapScalingMode="HighQuality" Margin="0,0,0,20" />
           <TextBlock Text="General" Style="{StaticResource PaneTitle}" />
           <TextBlock Text="Enable ClickLight and reset to defaults." Style="{StaticResource PaneSubtitle}" Margin="0,3,0,20" />
 

@@ -86,7 +86,7 @@ public sealed class TrayIcon : IDisposable
 
         RebuildMenu();
 
-        _iconImage = AppIconFactory.CreatePulseIcon();
+        _iconImage = LoadAppIcon();
         _icon = new NotifyIcon
         {
             Icon = _iconImage,
@@ -200,6 +200,27 @@ public sealed class TrayIcon : IDisposable
     }
 
     private static bool Near(double a, double b) => Math.Abs(a - b) < 0.5;
+
+    // The shipped multi-resolution icon; fall back to the drawn pulse icon if the
+    // resource is somehow unavailable.
+    private static Icon LoadAppIcon()
+    {
+        try
+        {
+            var info = System.Windows.Application.GetResourceStream(
+                new Uri("pack://application:,,,/Assets/icon.ico"));
+            if (info is not null)
+            {
+                using var stream = info.Stream;
+                return new Icon(stream);
+            }
+        }
+        catch
+        {
+            // Fall through to the generated icon.
+        }
+        return AppIconFactory.CreatePulseIcon();
+    }
 
     private static void ShowAbout() => MessageBox.Show(
         "ClickLight for Windows\n\nHighlights your mouse clicks on screen during demos and "
