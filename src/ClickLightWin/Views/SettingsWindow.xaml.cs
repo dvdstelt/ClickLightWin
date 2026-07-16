@@ -49,9 +49,11 @@ public partial class SettingsWindow : Window
 
         // Seed the color dropdowns with the palette plus any custom colors already in
         // use, then point every color combo at that shared, growable list.
-        foreach (var hex in new[] { settings.LeftColorHex, settings.RightColorHex, settings.MiddleColorHex, settings.AnnotationColorHex })
+        foreach (var hex in new[] { settings.LeftColorHex, settings.RightColorHex, settings.MiddleColorHex,
+                                    settings.AnnotationColorHex, settings.LaserOuterHex, settings.LaserInnerHex })
             EnsureColorChoice(hex);
-        foreach (var combo in new[] { LeftColorCombo, RightColorCombo, MiddleColorCombo, AnnotationColorCombo })
+        foreach (var combo in new[] { LeftColorCombo, RightColorCombo, MiddleColorCombo, AnnotationColorCombo,
+                                      LaserOuterCombo, LaserInnerCombo })
             combo.ItemsSource = _colorChoices;
 
         _panes = [PaneGeneral, PaneEvents, PaneStyle, PaneShortcuts, PaneProfiles, PaneActivity, PaneMenu];
@@ -67,6 +69,8 @@ public partial class SettingsWindow : Window
             "right" => s.RightColorHex,
             "middle" => s.MiddleColorHex,
             "annotation" => s.AnnotationColorHex,
+            "laserOuter" => s.LaserOuterHex,
+            "laserInner" => s.LaserInnerHex,
             _ => "#FFFFFF"
         };
         if (PickColor(current) is not { } picked) return;
@@ -77,6 +81,8 @@ public partial class SettingsWindow : Window
             case "right": s.RightColorHex = picked; break;
             case "middle": s.MiddleColorHex = picked; break;
             case "annotation": s.AnnotationColorHex = picked; break;
+            case "laserOuter": s.LaserOuterHex = picked; break;
+            case "laserInner": s.LaserInnerHex = picked; break;
         }
     }
 

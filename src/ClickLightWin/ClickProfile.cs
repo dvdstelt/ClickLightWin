@@ -19,6 +19,10 @@ public sealed class ClickProfile
     public string RightColorHex { get; set; } = "";
     public string MiddleColorHex { get; set; } = "";
     public string AnnotationColorHex { get; set; } = "";
+    // Default to the stock laser colors so profiles saved before this field existed
+    // still apply a valid laser color rather than blanking it.
+    public string LaserOuterHex { get; set; } = "#FF2905";
+    public string LaserInnerHex { get; set; } = "#FFFFFF";
     public bool ShowDrag { get; set; }
     public bool ShowRelease { get; set; }
     public bool ShowLaserPointer { get; set; }
@@ -47,6 +51,8 @@ public sealed class ClickProfile
         RightColorHex = s.RightColorHex;
         MiddleColorHex = s.MiddleColorHex;
         AnnotationColorHex = s.AnnotationColorHex;
+        LaserOuterHex = s.LaserOuterHex;
+        LaserInnerHex = s.LaserInnerHex;
         ShowDrag = s.ShowDrag;
         ShowRelease = s.ShowRelease;
         ShowLaserPointer = s.ShowLaserPointer;
@@ -64,6 +70,8 @@ public sealed class ClickProfile
         s.RightColorHex = RightColorHex;
         s.MiddleColorHex = MiddleColorHex;
         s.AnnotationColorHex = AnnotationColorHex;
+        s.LaserOuterHex = LaserOuterHex;
+        s.LaserInnerHex = LaserInnerHex;
         s.ShowDrag = ShowDrag;
         s.ShowRelease = ShowRelease;
         s.ShowLaserPointer = ShowLaserPointer;

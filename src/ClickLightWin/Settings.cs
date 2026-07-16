@@ -32,6 +32,8 @@ public sealed class Settings : INotifyPropertyChanged
     private string _rightColorHex = "#F97316";  // orange
     private string _middleColorHex = "#22C55E"; // green
     private string _annotationColorHex = "#EF4444"; // red (shared by arrows and boxes)
+    private string _laserOuterHex = "#FF2905";      // laser outer ring (red)
+    private string _laserInnerHex = "#FFFFFF";      // laser inner core (white)
     private HotKeyBinding _toggleHotKey = HotKeyBinding.DefaultToggle;
     private HotKeyBinding _clearHotKey = HotKeyBinding.DefaultClear;
     private HotKeyBinding _drawModeHotKey = HotKeyBinding.DefaultDrawMode;
@@ -55,6 +57,8 @@ public sealed class Settings : INotifyPropertyChanged
     public string RightColorHex { get => _rightColorHex; set => Set(ref _rightColorHex, value); }
     public string MiddleColorHex { get => _middleColorHex; set => Set(ref _middleColorHex, value); }
     public string AnnotationColorHex { get => _annotationColorHex; set => Set(ref _annotationColorHex, value); }
+    public string LaserOuterHex { get => _laserOuterHex; set => Set(ref _laserOuterHex, value); }
+    public string LaserInnerHex { get => _laserInnerHex; set => Set(ref _laserInnerHex, value); }
     public HotKeyBinding ToggleHotKey { get => _toggleHotKey; set => Set(ref _toggleHotKey, value); }
     public HotKeyBinding ClearHotKey { get => _clearHotKey; set => Set(ref _clearHotKey, value); }
     public HotKeyBinding DrawModeHotKey { get => _drawModeHotKey; set => Set(ref _drawModeHotKey, value); }
@@ -89,9 +93,11 @@ public sealed class Settings : INotifyPropertyChanged
     // outer glow, solid red, salmon, small white core) that follows movement,
     // plus a fading freehand stroke while dragging. Colors and proportions match
     // the macOS laser in ClickOverlayView.swift / SettingsStore.swift.
-    [JsonIgnore] public Color LaserColor => Color.FromRgb(0xFF, 0x29, 0x05);    // red   (macOS laserColor)
-    [JsonIgnore] public Color LaserMidColor => Color.FromRgb(0xFF, 0x94, 0x82); // salmon (macOS middle)
-    [JsonIgnore] public Color LaserCoreColor => Colors.White;                   // white  (macOS inner)
+    // Outer ring and inner core are user-set; the middle is the blend of the two,
+    // so the defaults (red outer, white inner) reproduce the original salmon middle.
+    [JsonIgnore] public Color LaserColor => ParseHex(_laserOuterHex);
+    [JsonIgnore] public Color LaserCoreColor => ParseHex(_laserInnerHex);
+    [JsonIgnore] public Color LaserMidColor => Blend(LaserColor, LaserCoreColor);
     [JsonIgnore] public double LaserGlowDiameter => 26; // soft outer aura
     [JsonIgnore] public double LaserRedDiameter => 14;  // solid red disc
     [JsonIgnore] public double LaserMidDiameter => 8;   // salmon disc
@@ -145,6 +151,8 @@ public sealed class Settings : INotifyPropertyChanged
         RightColorHex = other.RightColorHex;
         MiddleColorHex = other.MiddleColorHex;
         AnnotationColorHex = other.AnnotationColorHex;
+        LaserOuterHex = other.LaserOuterHex;
+        LaserInnerHex = other.LaserInnerHex;
         ToggleHotKey = other.ToggleHotKey;
         ClearHotKey = other.ClearHotKey;
         DrawModeHotKey = other.DrawModeHotKey;
@@ -163,6 +171,9 @@ public sealed class Settings : INotifyPropertyChanged
         ClickButton.Middle => _middleColorHex,
         _ => "#FFFFFF"
     });
+
+    private static Color Blend(Color a, Color b) =>
+        Color.FromRgb((byte)((a.R + b.R) / 2), (byte)((a.G + b.G) / 2), (byte)((a.B + b.B) / 2));
 
     private static Color ParseHex(string hex)
     {

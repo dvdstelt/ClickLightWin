@@ -19,7 +19,8 @@ namespace ClickLightWin.Rendering;
 public sealed class LaserRenderer : IDisposable
 {
     private readonly Canvas _canvas;
-    private readonly Grid _glow;
+    private Grid _glow;
+    private Color _builtOuter, _builtMid, _builtCore; // colors the current glow was built from
     private readonly DispatcherTimer _idle;
 
     // Cursor easing: the glow chases the latest target a fraction each frame,
@@ -34,6 +35,7 @@ public sealed class LaserRenderer : IDisposable
     {
         _canvas = canvas;
         _glow = BuildGlow(settings);
+        RememberColors(settings);
         _glow.Visibility = Visibility.Collapsed;
         _canvas.Children.Add(_glow);
 
@@ -44,6 +46,11 @@ public sealed class LaserRenderer : IDisposable
     /// <summary>Aim the halo at the cursor; a per-frame loop eases it into place.</summary>
     public void UpdateCursor(Point center, Settings settings)
     {
+        // Colors can change live (settings draft); rebuild the glow if they did.
+        if (settings.LaserColor != _builtOuter || settings.LaserMidColor != _builtMid
+            || settings.LaserCoreColor != _builtCore)
+            RebuildGlow(settings);
+
         _target = center;
         if (!_visible)
         {
@@ -57,6 +64,25 @@ public sealed class LaserRenderer : IDisposable
         EnsureRendering();
         _idle.Stop();
         _idle.Start();
+    }
+
+    private void RememberColors(Settings s)
+    {
+        _builtOuter = s.LaserColor;
+        _builtMid = s.LaserMidColor;
+        _builtCore = s.LaserCoreColor;
+    }
+
+    private void RebuildGlow(Settings settings)
+    {
+        var half = _glow.Width / 2;
+        _canvas.Children.Remove(_glow);
+        _glow = BuildGlow(settings);
+        RememberColors(settings);
+        _glow.Visibility = _visible ? Visibility.Visible : Visibility.Collapsed;
+        _canvas.Children.Add(_glow);
+        Canvas.SetLeft(_glow, _current.X - half);
+        Canvas.SetTop(_glow, _current.Y - half);
     }
 
     private void EnsureRendering()
