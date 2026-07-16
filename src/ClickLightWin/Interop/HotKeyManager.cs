@@ -14,18 +14,21 @@ public sealed class HotKeyManager : IDisposable
     private const int ToggleHotKeyId = 1;
     private const int ClearHotKeyId = 2;
     private const int DrawModeHotKeyId = 3;
+    private const int ShortcutsHotKeyId = 4;
 
     private HwndSource? _source;
-    private HotKeyBinding? _toggle, _clear, _drawMode;
+    private HotKeyBinding? _toggle, _clear, _drawMode, _shortcuts;
 
     public event Action? TogglePressed;
     public event Action? ClearPressed;
     public event Action? DrawModePressed;
+    public event Action? ShortcutsPressed;
 
     /// <summary>False when the binding is invalid or another application already owns it.</summary>
     public bool ToggleRegistered { get; private set; }
     public bool ClearRegistered { get; private set; }
     public bool DrawModeRegistered { get; private set; }
+    public bool ShortcutsRegistered { get; private set; }
 
     /// <summary>Create the message-only window that receives WM_HOTKEY.</summary>
     public void Start()
@@ -42,11 +45,12 @@ public sealed class HotKeyManager : IDisposable
     }
 
     /// <summary>Apply a new set of bindings and (re)register them.</summary>
-    public void Configure(HotKeyBinding toggle, HotKeyBinding clear, HotKeyBinding drawMode)
+    public void Configure(HotKeyBinding toggle, HotKeyBinding clear, HotKeyBinding drawMode, HotKeyBinding shortcuts)
     {
         _toggle = toggle;
         _clear = clear;
         _drawMode = drawMode;
+        _shortcuts = shortcuts;
         Reregister();
     }
 
@@ -60,6 +64,7 @@ public sealed class HotKeyManager : IDisposable
         ToggleRegistered = TryRegister(ToggleHotKeyId, _toggle);
         ClearRegistered = TryRegister(ClearHotKeyId, _clear);
         DrawModeRegistered = TryRegister(DrawModeHotKeyId, _drawMode);
+        ShortcutsRegistered = TryRegister(ShortcutsHotKeyId, _shortcuts);
     }
 
     private bool TryRegister(int id, HotKeyBinding? binding) =>
@@ -72,7 +77,8 @@ public sealed class HotKeyManager : IDisposable
         NativeMethods.UnregisterHotKey(_source.Handle, ToggleHotKeyId);
         NativeMethods.UnregisterHotKey(_source.Handle, ClearHotKeyId);
         NativeMethods.UnregisterHotKey(_source.Handle, DrawModeHotKeyId);
-        ToggleRegistered = ClearRegistered = DrawModeRegistered = false;
+        NativeMethods.UnregisterHotKey(_source.Handle, ShortcutsHotKeyId);
+        ToggleRegistered = ClearRegistered = DrawModeRegistered = ShortcutsRegistered = false;
     }
 
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
@@ -83,6 +89,7 @@ public sealed class HotKeyManager : IDisposable
             case ToggleHotKeyId: TogglePressed?.Invoke(); handled = true; break;
             case ClearHotKeyId: ClearPressed?.Invoke(); handled = true; break;
             case DrawModeHotKeyId: DrawModePressed?.Invoke(); handled = true; break;
+            case ShortcutsHotKeyId: ShortcutsPressed?.Invoke(); handled = true; break;
         }
         return 0;
     }

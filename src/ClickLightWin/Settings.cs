@@ -37,6 +37,7 @@ public sealed class Settings : INotifyPropertyChanged
     private HotKeyBinding _toggleHotKey = HotKeyBinding.DefaultToggle;
     private HotKeyBinding _clearHotKey = HotKeyBinding.DefaultClear;
     private HotKeyBinding _drawModeHotKey = HotKeyBinding.DefaultDrawMode;
+    private HotKeyBinding _shortcutsHotKey = HotKeyBinding.DefaultShortcuts;
     private string _currentProfileName = ProfileStore.DefaultProfileName;
     private ShortcutPosition _shortcutPosition = ShortcutPosition.BottomCenter;
     private ShortcutSize _shortcutSize = ShortcutSize.Medium;
@@ -66,6 +67,7 @@ public sealed class Settings : INotifyPropertyChanged
     public HotKeyBinding ToggleHotKey { get => _toggleHotKey; set => Set(ref _toggleHotKey, value); }
     public HotKeyBinding ClearHotKey { get => _clearHotKey; set => Set(ref _clearHotKey, value); }
     public HotKeyBinding DrawModeHotKey { get => _drawModeHotKey; set => Set(ref _drawModeHotKey, value); }
+    public HotKeyBinding ShortcutsHotKey { get => _shortcutsHotKey; set => Set(ref _shortcutsHotKey, value); }
 
     /// <summary>Name of the profile currently selected in the settings window.</summary>
     public string CurrentProfileName { get => _currentProfileName; set => Set(ref _currentProfileName, value); }
@@ -163,6 +165,7 @@ public sealed class Settings : INotifyPropertyChanged
         ToggleHotKey = other.ToggleHotKey;
         ClearHotKey = other.ClearHotKey;
         DrawModeHotKey = other.DrawModeHotKey;
+        ShortcutsHotKey = other.ShortcutsHotKey;
         CurrentProfileName = other.CurrentProfileName;
 
         // Deep-copy the menu layout into this instance's own collection (kept, not

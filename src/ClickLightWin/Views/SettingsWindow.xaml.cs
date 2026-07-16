@@ -142,6 +142,7 @@ public partial class SettingsWindow : Window
             case "toggle": settings.ToggleHotKey = HotKeyBinding.DefaultToggle; break;
             case "clear": settings.ClearHotKey = HotKeyBinding.DefaultClear; break;
             case "draw": settings.DrawModeHotKey = HotKeyBinding.DefaultDrawMode; break;
+            case "shortcuts": settings.ShortcutsHotKey = HotKeyBinding.DefaultShortcuts; break;
         }
     }
 

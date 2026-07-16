@@ -52,6 +52,7 @@ public sealed record HotKeyBinding(ModifierKeys Modifiers, Key Key)
     public static readonly HotKeyBinding DefaultToggle = new(ModifierKeys.Control | ModifierKeys.Shift, Key.L);
     public static readonly HotKeyBinding DefaultClear = new(ModifierKeys.Control | ModifierKeys.Shift, Key.C);
     public static readonly HotKeyBinding DefaultDrawMode = new(ModifierKeys.Control | ModifierKeys.Shift, Key.D);
+    public static readonly HotKeyBinding DefaultShortcuts = new(ModifierKeys.Control | ModifierKeys.Shift, Key.K);
 
     private static string KeyName(Key key) => key switch
     {

@@ -1,4 +1,5 @@
 using Microsoft.Win32; // SystemEvents
+using Color = System.Windows.Media.Color;
 using Screen = System.Windows.Forms.Screen;
 
 namespace ClickLightWin.Overlay;
@@ -104,6 +105,14 @@ public sealed class OverlayManager : IDisposable
         Interop.NativeMethods.GetCursorPos(out var pt);
         var overlay = FindByPoint(pt.X, pt.Y) ?? (_overlays.Count > 0 ? _overlays[0] : null);
         overlay?.ShowShortcut(keys, _settings, pt.X, pt.Y);
+    }
+
+    /// <summary>Announce a mode switch on the monitor holding the cursor.</summary>
+    public void ShowMode(string text, Color accent)
+    {
+        Interop.NativeMethods.GetCursorPos(out var pt);
+        var overlay = FindByPoint(pt.X, pt.Y) ?? (_overlays.Count > 0 ? _overlays[0] : null);
+        overlay?.ShowMode(text, accent);
     }
 
     private OverlayWindow? Find(ClickEvent click) => FindByPoint(click.ScreenX, click.ScreenY);
