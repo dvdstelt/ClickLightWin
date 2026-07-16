@@ -25,7 +25,7 @@ public sealed class ShortcutStackRenderer(StackPanel host)
 
     public void Show(IReadOnlyList<string> keys, Settings settings)
     {
-        var pill = BuildPill(keys);
+        var pill = BuildPill(keys, settings.ShortcutFontSize);
         host.Children.Add(pill);
         while (host.Children.Count > settings.ShortcutStackMax)
             host.Children.RemoveAt(0);
@@ -36,7 +36,8 @@ public sealed class ShortcutStackRenderer(StackPanel host)
         pill.BeginAnimation(UIElement.OpacityProperty, fade);
     }
 
-    private static Border BuildPill(IReadOnlyList<string> keys)
+    /// <summary>Build a key-cap pill (shared by the bottom stack and the near-pointer path).</summary>
+    public static Border BuildPill(IReadOnlyList<string> keys, double fontSize)
     {
         var row = new StackPanel { Orientation = Orientation.Horizontal };
         for (var i = 0; i < keys.Count; i++)
@@ -46,10 +47,11 @@ public sealed class ShortcutStackRenderer(StackPanel host)
                 {
                     Text = "+",
                     Foreground = PlusBrush,
+                    FontSize = fontSize,
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(5, 0, 5, 0)
                 });
-            row.Children.Add(Cap(keys[i]));
+            row.Children.Add(Cap(keys[i], fontSize));
         }
 
         return new Border
@@ -63,16 +65,16 @@ public sealed class ShortcutStackRenderer(StackPanel host)
         };
     }
 
-    private static Border Cap(string text) => new()
+    private static Border Cap(string text, double fontSize) => new()
     {
         Background = CapBackground,
         CornerRadius = new CornerRadius(5),
-        Padding = new Thickness(9, 3, 9, 3),
+        Padding = new Thickness(fontSize * 0.6, fontSize * 0.2, fontSize * 0.6, fontSize * 0.2),
         Child = new TextBlock
         {
             Text = text,
             Foreground = TextBrush,
-            FontSize = 15,
+            FontSize = fontSize,
             FontWeight = FontWeights.SemiBold,
             FontFamily = new FontFamily("Segoe UI Variable Text, Segoe UI")
         }

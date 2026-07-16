@@ -542,6 +542,21 @@
               </Grid>
             </StackPanel>
           </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Shortcut Display" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Where the shortcut pills appear and how large they are." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <TextBlock Text="Position" Style="{StaticResource RowSub}" Margin="0,0,0,6" />
+              <ListBox Style="{StaticResource Segmented}" ItemsSource="{x:Static local:ShortcutDisplay.Positions}"
+                       DisplayMemberPath="Title" SelectedValuePath="Value"
+                       SelectedValue="{Binding ShortcutPosition, Mode=TwoWay}" Margin="0,0,0,12" />
+              <TextBlock Text="Size" Style="{StaticResource RowSub}" Margin="0,0,0,6" />
+              <ListBox Style="{StaticResource Segmented}" ItemsSource="{x:Static local:ShortcutDisplay.Sizes}"
+                       DisplayMemberPath="Title" SelectedValuePath="Value"
+                       SelectedValue="{Binding ShortcutSize, Mode=TwoWay}" />
+            </StackPanel>
+          </Border>
         </StackPanel>
 
         <!-- ===== Visual Style ===== -->

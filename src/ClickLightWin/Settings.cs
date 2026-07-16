@@ -38,6 +38,8 @@ public sealed class Settings : INotifyPropertyChanged
     private HotKeyBinding _clearHotKey = HotKeyBinding.DefaultClear;
     private HotKeyBinding _drawModeHotKey = HotKeyBinding.DefaultDrawMode;
     private string _currentProfileName = ProfileStore.DefaultProfileName;
+    private ShortcutPosition _shortcutPosition = ShortcutPosition.BottomCenter;
+    private ShortcutSize _shortcutSize = ShortcutSize.Medium;
 
     // ---- Persisted, user-editable -------------------------------------------
 
@@ -50,6 +52,8 @@ public sealed class Settings : INotifyPropertyChanged
     public bool ShowLaserPointer { get => _showLaserPointer; set => Set(ref _showLaserPointer, value); }
     public bool EnableAnnotations { get => _enableAnnotations; set => Set(ref _enableAnnotations, value); }
     public bool ShowShortcuts { get => _showShortcuts; set => Set(ref _showShortcuts, value); }
+    public ShortcutPosition ShortcutPosition { get => _shortcutPosition; set => Set(ref _shortcutPosition, value); }
+    public ShortcutSize ShortcutSize { get => _shortcutSize; set => Set(ref _shortcutSize, value); }
     public double BaseDiameterDips { get => _baseDiameterDips; set => Set(ref _baseDiameterDips, value); }
     public double PulseDurationMs { get => _pulseDurationMs; set => Set(ref _pulseDurationMs, value); }
     public double PulseIntensity { get => _pulseIntensity; set => Set(ref _pulseIntensity, value); }
@@ -118,6 +122,7 @@ public sealed class Settings : INotifyPropertyChanged
     [JsonIgnore] public double BoxCornerRadius => 3;
 
     // Live shortcut display: a bottom-center stack of key-cap pills that hold, then fade.
+    [JsonIgnore] public double ShortcutFontSize => ShortcutDisplay.FontSize(_shortcutSize);
     [JsonIgnore] public Duration ShortcutHold => new(TimeSpan.FromMilliseconds(1100));
     [JsonIgnore] public Duration ShortcutFade => new(TimeSpan.FromMilliseconds(350));
     [JsonIgnore] public int ShortcutStackMax => 6;
@@ -144,6 +149,8 @@ public sealed class Settings : INotifyPropertyChanged
         ShowLaserPointer = other.ShowLaserPointer;
         EnableAnnotations = other.EnableAnnotations;
         ShowShortcuts = other.ShowShortcuts;
+        ShortcutPosition = other.ShortcutPosition;
+        ShortcutSize = other.ShortcutSize;
         BaseDiameterDips = other.BaseDiameterDips;
         PulseDurationMs = other.PulseDurationMs;
         PulseIntensity = other.PulseIntensity;

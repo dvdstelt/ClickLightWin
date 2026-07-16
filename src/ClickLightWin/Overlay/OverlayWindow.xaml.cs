@@ -139,11 +139,33 @@ public partial class OverlayWindow : Window
         return brush;
     }
 
-    /// <summary>Show a shortcut in this monitor's bottom-center stack.</summary>
-    public void ShowShortcut(IReadOnlyList<string> keys, Settings settings)
+    /// <summary>Show a shortcut, either in this monitor's bottom-center stack or near
+    /// the cursor (physical pixels), per the settings.</summary>
+    public void ShowShortcut(IReadOnlyList<string> keys, Settings settings, int screenX, int screenY)
     {
+        if (settings.ShortcutPosition == ShortcutPosition.NearPointer)
+        {
+            ShowShortcutNearPointer(keys, settings, screenX, screenY);
+            return;
+        }
         _shortcuts ??= new ShortcutStackRenderer(ShortcutStack);
         _shortcuts.Show(keys, settings);
+    }
+
+    private void ShowShortcutNearPointer(IReadOnlyList<string> keys, Settings settings, int screenX, int screenY)
+    {
+        var pill = ShortcutStackRenderer.BuildPill(keys, settings.ShortcutFontSize);
+        var local = ToLocal(screenX, screenY);
+        System.Windows.Controls.Canvas.SetLeft(pill, local.X + 16);
+        System.Windows.Controls.Canvas.SetTop(pill, local.Y + 18);
+        PulseCanvas.Children.Add(pill);
+
+        var fade = new System.Windows.Media.Animation.DoubleAnimation(1, 0, settings.ShortcutFade)
+        {
+            BeginTime = settings.ShortcutHold.TimeSpan
+        };
+        fade.Completed += (_, _) => PulseCanvas.Children.Remove(pill);
+        pill.BeginAnimation(OpacityProperty, fade);
     }
 
     protected override void OnClosed(EventArgs e)
