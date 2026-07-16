@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-07-16
+
+### Added
+
+- Pulse **Intensity** control (Subtle / Normal / Bright / Beacon) in Visual Style;
+  Normal matches the previous look.
+- **Custom color picker** per click type: a "Custom…" button beside each color
+  dropdown opens the native color dialog to pick any color, and picks are kept in
+  the dropdown for reuse.
+- **Laser pointer color** customization: choose the outer and inner colors (the
+  middle is their blend) under Visual Style.
+- **Position and size** for the live keyboard-shortcut display: Bottom-Center or
+  Near-Pointer placement, and Small / Medium / Large pills.
+
 ## [1.4.0] - 2026-07-15
 
 ### Added
@@ -120,7 +134,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release: fading click pulses drawn at the cursor, a system-tray
   presence, a transparent click-through overlay, and a system-wide mouse hook.
 
-[Unreleased]: https://github.com/dvdstelt/ClickLightWin/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/dvdstelt/ClickLightWin/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/dvdstelt/ClickLightWin/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/dvdstelt/ClickLightWin/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/dvdstelt/ClickLightWin/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/dvdstelt/ClickLightWin/compare/v1.1.0...v1.2.0

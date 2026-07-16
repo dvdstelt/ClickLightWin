@@ -27,14 +27,19 @@ public sealed class Settings : INotifyPropertyChanged
     private bool _showShortcuts = false;
     private double _baseDiameterDips = 32;  // Medium preset
     private double _pulseDurationMs = 480;  // Normal preset
+    private double _pulseIntensity = 1.0;   // Normal preset (matches the original look)
     private string _leftColorHex = "#3B82F6";   // blue
     private string _rightColorHex = "#F97316";  // orange
     private string _middleColorHex = "#22C55E"; // green
     private string _annotationColorHex = "#EF4444"; // red (shared by arrows and boxes)
+    private string _laserOuterHex = "#FF2905";      // laser outer ring (red)
+    private string _laserInnerHex = "#FFFFFF";      // laser inner core (white)
     private HotKeyBinding _toggleHotKey = HotKeyBinding.DefaultToggle;
     private HotKeyBinding _clearHotKey = HotKeyBinding.DefaultClear;
     private HotKeyBinding _drawModeHotKey = HotKeyBinding.DefaultDrawMode;
     private string _currentProfileName = ProfileStore.DefaultProfileName;
+    private ShortcutPosition _shortcutPosition = ShortcutPosition.BottomCenter;
+    private ShortcutSize _shortcutSize = ShortcutSize.Medium;
 
     // ---- Persisted, user-editable -------------------------------------------
 
@@ -47,12 +52,17 @@ public sealed class Settings : INotifyPropertyChanged
     public bool ShowLaserPointer { get => _showLaserPointer; set => Set(ref _showLaserPointer, value); }
     public bool EnableAnnotations { get => _enableAnnotations; set => Set(ref _enableAnnotations, value); }
     public bool ShowShortcuts { get => _showShortcuts; set => Set(ref _showShortcuts, value); }
+    public ShortcutPosition ShortcutPosition { get => _shortcutPosition; set => Set(ref _shortcutPosition, value); }
+    public ShortcutSize ShortcutSize { get => _shortcutSize; set => Set(ref _shortcutSize, value); }
     public double BaseDiameterDips { get => _baseDiameterDips; set => Set(ref _baseDiameterDips, value); }
     public double PulseDurationMs { get => _pulseDurationMs; set => Set(ref _pulseDurationMs, value); }
+    public double PulseIntensity { get => _pulseIntensity; set => Set(ref _pulseIntensity, value); }
     public string LeftColorHex { get => _leftColorHex; set => Set(ref _leftColorHex, value); }
     public string RightColorHex { get => _rightColorHex; set => Set(ref _rightColorHex, value); }
     public string MiddleColorHex { get => _middleColorHex; set => Set(ref _middleColorHex, value); }
     public string AnnotationColorHex { get => _annotationColorHex; set => Set(ref _annotationColorHex, value); }
+    public string LaserOuterHex { get => _laserOuterHex; set => Set(ref _laserOuterHex, value); }
+    public string LaserInnerHex { get => _laserInnerHex; set => Set(ref _laserInnerHex, value); }
     public HotKeyBinding ToggleHotKey { get => _toggleHotKey; set => Set(ref _toggleHotKey, value); }
     public HotKeyBinding ClearHotKey { get => _clearHotKey; set => Set(ref _clearHotKey, value); }
     public HotKeyBinding DrawModeHotKey { get => _drawModeHotKey; set => Set(ref _drawModeHotKey, value); }
@@ -87,9 +97,11 @@ public sealed class Settings : INotifyPropertyChanged
     // outer glow, solid red, salmon, small white core) that follows movement,
     // plus a fading freehand stroke while dragging. Colors and proportions match
     // the macOS laser in ClickOverlayView.swift / SettingsStore.swift.
-    [JsonIgnore] public Color LaserColor => Color.FromRgb(0xFF, 0x29, 0x05);    // red   (macOS laserColor)
-    [JsonIgnore] public Color LaserMidColor => Color.FromRgb(0xFF, 0x94, 0x82); // salmon (macOS middle)
-    [JsonIgnore] public Color LaserCoreColor => Colors.White;                   // white  (macOS inner)
+    // Outer ring and inner core are user-set; the middle is the blend of the two,
+    // so the defaults (red outer, white inner) reproduce the original salmon middle.
+    [JsonIgnore] public Color LaserColor => ParseHex(_laserOuterHex);
+    [JsonIgnore] public Color LaserCoreColor => ParseHex(_laserInnerHex);
+    [JsonIgnore] public Color LaserMidColor => Blend(LaserColor, LaserCoreColor);
     [JsonIgnore] public double LaserGlowDiameter => 26; // soft outer aura
     [JsonIgnore] public double LaserRedDiameter => 14;  // solid red disc
     [JsonIgnore] public double LaserMidDiameter => 8;   // salmon disc
@@ -110,6 +122,7 @@ public sealed class Settings : INotifyPropertyChanged
     [JsonIgnore] public double BoxCornerRadius => 3;
 
     // Live shortcut display: a bottom-center stack of key-cap pills that hold, then fade.
+    [JsonIgnore] public double ShortcutFontSize => ShortcutDisplay.FontSize(_shortcutSize);
     [JsonIgnore] public Duration ShortcutHold => new(TimeSpan.FromMilliseconds(1100));
     [JsonIgnore] public Duration ShortcutFade => new(TimeSpan.FromMilliseconds(350));
     [JsonIgnore] public int ShortcutStackMax => 6;
@@ -136,12 +149,17 @@ public sealed class Settings : INotifyPropertyChanged
         ShowLaserPointer = other.ShowLaserPointer;
         EnableAnnotations = other.EnableAnnotations;
         ShowShortcuts = other.ShowShortcuts;
+        ShortcutPosition = other.ShortcutPosition;
+        ShortcutSize = other.ShortcutSize;
         BaseDiameterDips = other.BaseDiameterDips;
         PulseDurationMs = other.PulseDurationMs;
+        PulseIntensity = other.PulseIntensity;
         LeftColorHex = other.LeftColorHex;
         RightColorHex = other.RightColorHex;
         MiddleColorHex = other.MiddleColorHex;
         AnnotationColorHex = other.AnnotationColorHex;
+        LaserOuterHex = other.LaserOuterHex;
+        LaserInnerHex = other.LaserInnerHex;
         ToggleHotKey = other.ToggleHotKey;
         ClearHotKey = other.ClearHotKey;
         DrawModeHotKey = other.DrawModeHotKey;
@@ -160,6 +178,9 @@ public sealed class Settings : INotifyPropertyChanged
         ClickButton.Middle => _middleColorHex,
         _ => "#FFFFFF"
     });
+
+    private static Color Blend(Color a, Color b) =>
+        Color.FromRgb((byte)((a.R + b.R) / 2), (byte)((a.G + b.G) / 2), (byte)((a.B + b.B) / 2));
 
     private static Color ParseHex(string hex)
     {

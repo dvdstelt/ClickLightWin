@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,6 +27,7 @@ public partial class SettingsWindow : Window
     private readonly Random _rng = new();
     private readonly ProfileStore _profiles;
     private readonly ActivityStore _activity;
+    private readonly ObservableCollection<ColorSwatch> _colorChoices = new(Palette.Colors);
     private bool _suppressProfileLoad;
     private Point _menuDragStart;
     private MenuLayoutEntry? _menuDragItem;
@@ -44,8 +46,77 @@ public partial class SettingsWindow : Window
         // that differ from the profile's snapshot are preserved on open.
         SelectProfileByName(settings.CurrentProfileName);
         PopulateActivity();
+
+        // Seed the color dropdowns with the palette plus any custom colors already in
+        // use, then point every color combo at that shared, growable list.
+        foreach (var hex in new[] { settings.LeftColorHex, settings.RightColorHex, settings.MiddleColorHex,
+                                    settings.AnnotationColorHex, settings.LaserOuterHex, settings.LaserInnerHex })
+            EnsureColorChoice(hex);
+        foreach (var combo in new[] { LeftColorCombo, RightColorCombo, MiddleColorCombo, AnnotationColorCombo,
+                                      LaserOuterCombo, LaserInnerCombo })
+            combo.ItemsSource = _colorChoices;
+
         _panes = [PaneGeneral, PaneEvents, PaneStyle, PaneShortcuts, PaneProfiles, PaneActivity, PaneMenu];
         Nav.SelectedIndex = 0;
+    }
+
+    private void OnPickColor(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not Settings s || sender is not FrameworkElement { Tag: string which }) return;
+        var current = which switch
+        {
+            "left" => s.LeftColorHex,
+            "right" => s.RightColorHex,
+            "middle" => s.MiddleColorHex,
+            "annotation" => s.AnnotationColorHex,
+            "laserOuter" => s.LaserOuterHex,
+            "laserInner" => s.LaserInnerHex,
+            _ => "#FFFFFF"
+        };
+        if (PickColor(current) is not { } picked) return;
+        EnsureColorChoice(picked); // so the combo can display and keep it
+        switch (which)
+        {
+            case "left": s.LeftColorHex = picked; break;
+            case "right": s.RightColorHex = picked; break;
+            case "middle": s.MiddleColorHex = picked; break;
+            case "annotation": s.AnnotationColorHex = picked; break;
+            case "laserOuter": s.LaserOuterHex = picked; break;
+            case "laserInner": s.LaserInnerHex = picked; break;
+        }
+    }
+
+    private void EnsureColorChoice(string hex)
+    {
+        if (string.IsNullOrWhiteSpace(hex)) return;
+        if (!_colorChoices.Any(c => string.Equals(c.Hex, hex, StringComparison.OrdinalIgnoreCase)))
+            _colorChoices.Add(new ColorSwatch(hex, "Custom"));
+    }
+
+    private static string? PickColor(string currentHex)
+    {
+        using var dialog = new System.Windows.Forms.ColorDialog
+        {
+            Color = ToDrawingColor(currentHex),
+            FullOpen = true,
+            AnyColor = true
+        };
+        return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK
+            ? $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}"
+            : null;
+    }
+
+    private static System.Drawing.Color ToDrawingColor(string hex)
+    {
+        try
+        {
+            var c = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex);
+            return System.Drawing.Color.FromArgb(c.R, c.G, c.B);
+        }
+        catch
+        {
+            return System.Drawing.Color.White;
+        }
     }
 
     private void OnOk(object sender, RoutedEventArgs e)

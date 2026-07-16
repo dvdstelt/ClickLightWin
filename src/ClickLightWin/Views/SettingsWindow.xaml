@@ -193,7 +193,7 @@
       </StackPanel>
     </DataTemplate>
     <Style x:Key="ColorCombo" TargetType="ComboBox" BasedOn="{StaticResource DarkCombo}">
-      <Setter Property="ItemsSource" Value="{x:Static local:Palette.Colors}" />
+      <!-- ItemsSource is set in code to a per-window list so custom picks appear here. -->
       <Setter Property="SelectedValuePath" Value="Hex" />
       <Setter Property="ItemTemplate" Value="{StaticResource ColorItem}" />
       <Setter Property="Width" Value="150" />
@@ -542,6 +542,21 @@
               </Grid>
             </StackPanel>
           </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Shortcut Display" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Where the shortcut pills appear and how large they are." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <TextBlock Text="Position" Style="{StaticResource RowSub}" Margin="0,0,0,6" />
+              <ListBox Style="{StaticResource Segmented}" ItemsSource="{x:Static local:ShortcutDisplay.Positions}"
+                       DisplayMemberPath="Title" SelectedValuePath="Value"
+                       SelectedValue="{Binding ShortcutPosition, Mode=TwoWay}" Margin="0,0,0,12" />
+              <TextBlock Text="Size" Style="{StaticResource RowSub}" Margin="0,0,0,6" />
+              <ListBox Style="{StaticResource Segmented}" ItemsSource="{x:Static local:ShortcutDisplay.Sizes}"
+                       DisplayMemberPath="Title" SelectedValuePath="Value"
+                       SelectedValue="{Binding ShortcutSize, Mode=TwoWay}" />
+            </StackPanel>
+          </Border>
         </StackPanel>
 
         <!-- ===== Visual Style ===== -->
@@ -561,6 +576,16 @@
 
           <Border Style="{StaticResource CardBox}">
             <StackPanel>
+              <TextBlock Text="Intensity" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="How bright the click pulse appears." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <ListBox Style="{StaticResource Segmented}" ItemsSource="{x:Static local:Presets.Intensities}"
+                       DisplayMemberPath="Title" SelectedValuePath="Value"
+                       SelectedValue="{Binding PulseIntensity, Mode=TwoWay}" />
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
               <TextBlock Text="Duration" Style="{StaticResource CardTitle}" />
               <TextBlock Text="How long each pulse stays visible." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
               <ListBox Style="{StaticResource Segmented}" ItemsSource="{x:Static local:Presets.Durations}"
@@ -574,19 +599,44 @@
               <TextBlock Text="Colors" Style="{StaticResource CardTitle}" />
               <TextBlock Text="Tint applied to each click type." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
               <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                   <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Left click" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
-                <ComboBox Grid.Row="0" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding LeftColorHex, Mode=TwoWay}" Margin="0,0,0,8" />
+                <ComboBox x:Name="LeftColorCombo" Grid.Row="0" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding LeftColorHex, Mode=TwoWay}" Margin="0,0,0,8" />
+                <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource OutlineButton}" Content="Custom&#x2026;" Tag="left" Click="OnPickColor" Margin="8,0,0,8" />
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Right click" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
-                <ComboBox Grid.Row="1" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding RightColorHex, Mode=TwoWay}" Margin="0,0,0,8" />
+                <ComboBox x:Name="RightColorCombo" Grid.Row="1" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding RightColorHex, Mode=TwoWay}" Margin="0,0,0,8" />
+                <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource OutlineButton}" Content="Custom&#x2026;" Tag="right" Click="OnPickColor" Margin="8,0,0,8" />
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Middle click" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
-                <ComboBox Grid.Row="2" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding MiddleColorHex, Mode=TwoWay}" Margin="0,0,0,8" />
+                <ComboBox x:Name="MiddleColorCombo" Grid.Row="2" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding MiddleColorHex, Mode=TwoWay}" Margin="0,0,0,8" />
+                <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource OutlineButton}" Content="Custom&#x2026;" Tag="middle" Click="OnPickColor" Margin="8,0,0,8" />
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Annotations" Style="{StaticResource RowTitle}" />
-                <ComboBox Grid.Row="3" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding AnnotationColorHex, Mode=TwoWay}" />
+                <ComboBox x:Name="AnnotationColorCombo" Grid.Row="3" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding AnnotationColorHex, Mode=TwoWay}" />
+                <Button Grid.Row="3" Grid.Column="2" Style="{StaticResource OutlineButton}" Content="Custom&#x2026;" Tag="annotation" Click="OnPickColor" Margin="8,0,0,0" />
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource CardBox}">
+            <StackPanel>
+              <TextBlock Text="Laser Pointer" Style="{StaticResource CardTitle}" />
+              <TextBlock Text="Outer ring and inner core. The middle color is blended automatically." Style="{StaticResource CardSubtitle}" Margin="0,0,0,12" />
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Outer" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
+                <ComboBox x:Name="LaserOuterCombo" Grid.Row="0" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding LaserOuterHex, Mode=TwoWay}" Margin="0,0,0,8" />
+                <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource OutlineButton}" Content="Custom&#x2026;" Tag="laserOuter" Click="OnPickColor" Margin="8,0,0,8" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Inner" Style="{StaticResource RowTitle}" />
+                <ComboBox x:Name="LaserInnerCombo" Grid.Row="1" Grid.Column="1" Style="{StaticResource ColorCombo}" SelectedValue="{Binding LaserInnerHex, Mode=TwoWay}" />
+                <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource OutlineButton}" Content="Custom&#x2026;" Tag="laserInner" Click="OnPickColor" Margin="8,0,0,0" />
               </Grid>
             </StackPanel>
           </Border>
