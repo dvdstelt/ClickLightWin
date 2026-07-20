@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A configurable **Ctrl+Shift+K** hotkey that toggles the live keyboard-shortcut display.
 - An on-screen badge that announces the current mode (color-coded) when you use the
   toggle hotkey.
+- **Screen zoom** (default **Ctrl+Shift+Z**): a ZoomIt-style full-screen zoom that
+  freezes the monitor under the cursor and lets you scroll to zoom (up to 6×) and move
+  the mouse to pan, keeping the point under the cursor fixed. Scrolling all the way
+  back out, Esc, right-click, or the hotkey again exits. The hotkey is configurable.
 
 ### Changed
 
