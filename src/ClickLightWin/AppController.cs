@@ -23,6 +23,7 @@ public sealed class AppController : IDisposable
     private readonly LaunchAtLoginController _launchAtLogin = new();
     private readonly ProfileStore _profileStore = new();
     private readonly ActivityStore _activity = new();
+    private readonly ZoomController _zoom = new();
     private readonly UpdateService _updates = new();
     private Settings _settings = new();
     private TrayIcon? _tray;
@@ -67,6 +68,7 @@ public sealed class AppController : IDisposable
         _hotKeys.ClearPressed += ClearAnnotations;
         _hotKeys.DrawModePressed += ToggleDrawMode;
         _hotKeys.ShortcutsPressed += ToggleShortcuts;
+        _hotKeys.ZoomPressed += () => _zoom.Toggle();
         _hotKeys.Start();
         ConfigureHotkeys();
 
@@ -148,7 +150,8 @@ public sealed class AppController : IDisposable
 
     private void ConfigureHotkeys()
     {
-        _hotKeys.Configure(_settings.ToggleHotKey, _settings.ClearHotKey, _settings.DrawModeHotKey, _settings.ShortcutsHotKey);
+        _hotKeys.Configure(_settings.ToggleHotKey, _settings.ClearHotKey, _settings.DrawModeHotKey,
+            _settings.ShortcutsHotKey, _settings.ZoomHotKey);
         WarnAboutUnavailableHotkeys();
     }
 
@@ -161,6 +164,7 @@ public sealed class AppController : IDisposable
         if (!_hotKeys.ClearRegistered) taken.Add($"{_settings.ClearHotKey.Display} (clear annotations)");
         if (!_hotKeys.DrawModeRegistered) taken.Add($"{_settings.DrawModeHotKey.Display} (drawing mode)");
         if (!_hotKeys.ShortcutsRegistered) taken.Add($"{_settings.ShortcutsHotKey.Display} (keyboard shortcuts)");
+        if (!_hotKeys.ZoomRegistered) taken.Add($"{_settings.ZoomHotKey.Display} (zoom)");
         if (taken.Count == 0) return;
         _tray?.ShowWarning("ClickLight shortcut unavailable",
             $"{string.Join(" and ", taken)} could not be registered (already in use or invalid).");
@@ -327,6 +331,7 @@ public sealed class AppController : IDisposable
         _keyboardHook.Dispose();
         _hotKeys.Dispose();
         _overlays?.Dispose();
+        _zoom.Dispose();
         _tray?.Dispose();
     }
 }

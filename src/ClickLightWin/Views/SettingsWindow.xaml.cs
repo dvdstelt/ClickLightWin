@@ -143,6 +143,7 @@ public partial class SettingsWindow : Window
             case "clear": settings.ClearHotKey = HotKeyBinding.DefaultClear; break;
             case "draw": settings.DrawModeHotKey = HotKeyBinding.DefaultDrawMode; break;
             case "shortcuts": settings.ShortcutsHotKey = HotKeyBinding.DefaultShortcuts; break;
+            case "zoom": settings.ZoomHotKey = HotKeyBinding.DefaultZoom; break;
         }
     }
 
