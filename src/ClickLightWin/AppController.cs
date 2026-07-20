@@ -23,6 +23,7 @@ public sealed class AppController : IDisposable
     private readonly LaunchAtLoginController _launchAtLogin = new();
     private readonly ProfileStore _profileStore = new();
     private readonly ActivityStore _activity = new();
+    private readonly ZoomController _zoom = new();
     private readonly UpdateService _updates = new();
     private Settings _settings = new();
     private TrayIcon? _tray;
@@ -63,9 +64,11 @@ public sealed class AppController : IDisposable
         _overlays = new OverlayManager(_settings);
 
         // Global hotkeys (defaults Ctrl+Shift+L/C/D; user-configurable in settings).
-        _hotKeys.TogglePressed += ToggleEnabled;
+        _hotKeys.TogglePressed += CycleMode;
         _hotKeys.ClearPressed += ClearAnnotations;
         _hotKeys.DrawModePressed += ToggleDrawMode;
+        _hotKeys.ShortcutsPressed += ToggleShortcuts;
+        _hotKeys.ZoomPressed += () => _zoom.Toggle();
         _hotKeys.Start();
         ConfigureHotkeys();
 
@@ -147,7 +150,8 @@ public sealed class AppController : IDisposable
 
     private void ConfigureHotkeys()
     {
-        _hotKeys.Configure(_settings.ToggleHotKey, _settings.ClearHotKey, _settings.DrawModeHotKey);
+        _hotKeys.Configure(_settings.ToggleHotKey, _settings.ClearHotKey, _settings.DrawModeHotKey,
+            _settings.ShortcutsHotKey, _settings.ZoomHotKey);
         WarnAboutUnavailableHotkeys();
     }
 
@@ -159,6 +163,8 @@ public sealed class AppController : IDisposable
         if (!_hotKeys.ToggleRegistered) taken.Add($"{_settings.ToggleHotKey.Display} (toggle)");
         if (!_hotKeys.ClearRegistered) taken.Add($"{_settings.ClearHotKey.Display} (clear annotations)");
         if (!_hotKeys.DrawModeRegistered) taken.Add($"{_settings.DrawModeHotKey.Display} (drawing mode)");
+        if (!_hotKeys.ShortcutsRegistered) taken.Add($"{_settings.ShortcutsHotKey.Display} (keyboard shortcuts)");
+        if (!_hotKeys.ZoomRegistered) taken.Add($"{_settings.ZoomHotKey.Display} (zoom)");
         if (taken.Count == 0) return;
         _tray?.ShowWarning("ClickLight shortcut unavailable",
             $"{string.Join(" and ", taken)} could not be registered (already in use or invalid).");
@@ -239,12 +245,50 @@ public sealed class AppController : IDisposable
         }
     }
 
-    // The global hotkey path. The tray menu toggles Enabled on its own; both just
-    // mutate the shared settings, and the tray refreshes its checkmarks on open.
-    private void ToggleEnabled()
+    // The toggle hotkey cycles through three modes: Off -> ClickLight (pulses only)
+    // -> Laser Pointer (pulses + laser glow) -> Off. The tray still toggles Enabled and
+    // the laser independently; the tray refreshes its checkmarks on open.
+    private void CycleMode()
     {
-        _settings.Enabled = !_settings.Enabled;
+        if (!_settings.Enabled)
+        {
+            _settings.ShowLaserPointer = false; // Off -> ClickLight
+            _settings.Enabled = true;
+        }
+        else if (!_settings.ShowLaserPointer)
+        {
+            _settings.ShowLaserPointer = true;  // ClickLight -> Laser Pointer
+        }
+        else
+        {
+            _settings.Enabled = false;          // Laser Pointer -> Off
+        }
         _settingsStore.Save(_settings);
+        AnnounceMode();
+    }
+
+    // Show a transient badge naming the mode we just switched to, color-coded so it
+    // stands apart from the live keyboard-shortcut pills.
+    private void AnnounceMode()
+    {
+        var (text, color) = !_settings.Enabled
+            ? ("Off", System.Windows.Media.Color.FromRgb(0x9A, 0x9A, 0xA2))
+            : !_settings.ShowLaserPointer
+                ? ("ClickLight", System.Windows.Media.Color.FromRgb(0x3B, 0x82, 0xF6))
+                : ("Laser Pointer", System.Windows.Media.Color.FromRgb(0xFF, 0x29, 0x05));
+        _overlays?.ShowMode(text, color);
+    }
+
+    // Toggle the live keyboard-shortcut display. Since it is otherwise invisible until
+    // the next shortcut is pressed, announce the new state with a toast.
+    private void ToggleShortcuts()
+    {
+        _settings.ShowShortcuts = !_settings.ShowShortcuts;
+        _settingsStore.Save(_settings);
+        var (text, color) = _settings.ShowShortcuts
+            ? ("Keyboard Shortcuts On", System.Windows.Media.Color.FromRgb(0x3B, 0x82, 0xF6))
+            : ("Keyboard Shortcuts Off", System.Windows.Media.Color.FromRgb(0x9A, 0x9A, 0xA2));
+        _overlays?.ShowMode(text, color);
     }
 
     private void ShowSettings()
@@ -287,6 +331,7 @@ public sealed class AppController : IDisposable
         _keyboardHook.Dispose();
         _hotKeys.Dispose();
         _overlays?.Dispose();
+        _zoom.Dispose();
         _tray?.Dispose();
     }
 }

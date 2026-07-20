@@ -24,6 +24,7 @@ public partial class OverlayWindow : Window
     private LaserRenderer? _laser;
     private AnnotationRenderer? _annotations;
     private ShortcutStackRenderer? _shortcuts;
+    private ModeIndicatorRenderer? _mode;
     private DrawStrokeRenderer? _drawStrokes;
     private bool _drawing;
     private nint _hwnd;
@@ -150,6 +151,13 @@ public partial class OverlayWindow : Window
         }
         _shortcuts ??= new ShortcutStackRenderer(ShortcutStack);
         _shortcuts.Show(keys, settings);
+    }
+
+    /// <summary>Show a transient, color-coded mode-switch badge at the top-center.</summary>
+    public void ShowMode(string text, Color accent)
+    {
+        _mode ??= new ModeIndicatorRenderer(ModeHost);
+        _mode.Show(text, accent);
     }
 
     private void ShowShortcutNearPointer(IReadOnlyList<string> keys, Settings settings, int screenX, int screenY)

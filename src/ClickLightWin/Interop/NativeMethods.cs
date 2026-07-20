@@ -89,6 +89,11 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool DestroyIcon(nint hIcon);
 
+    // Free a GDI object (e.g. the HBITMAP from a screen capture).
+    [LibraryImport("gdi32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DeleteObject(nint hObject);
+
     // ---- Foreground activation -----------------------------------------------
 
     // A tray context menu shown by hand never gets foreground activation, so a

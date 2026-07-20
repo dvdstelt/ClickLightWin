@@ -652,16 +652,22 @@
               <TextBlock Text="Global Shortcuts" Style="{StaticResource CardTitle}" Margin="0,0,0,12" />
               <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Toggle ClickLight" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
                 <views:ShortcutRecorder Grid.Row="0" Grid.Column="1" Binding="{Binding ToggleHotKey, Mode=TwoWay}" Margin="0,0,0,8" />
                 <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="toggle" Click="OnResetShortcut" Margin="4,0,0,8" />
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Clear annotations" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
                 <views:ShortcutRecorder Grid.Row="1" Grid.Column="1" Binding="{Binding ClearHotKey, Mode=TwoWay}" Margin="0,0,0,8" />
                 <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="clear" Click="OnResetShortcut" Margin="4,0,0,8" />
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Drawing mode" Style="{StaticResource RowTitle}" />
-                <views:ShortcutRecorder Grid.Row="2" Grid.Column="1" Binding="{Binding DrawModeHotKey, Mode=TwoWay}" />
-                <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="draw" Click="OnResetShortcut" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Drawing mode" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
+                <views:ShortcutRecorder Grid.Row="2" Grid.Column="1" Binding="{Binding DrawModeHotKey, Mode=TwoWay}" Margin="0,0,0,8" />
+                <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="draw" Click="OnResetShortcut" Margin="4,0,0,8" />
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Keyboard shortcuts display" Style="{StaticResource RowTitle}" Margin="0,0,0,8" />
+                <views:ShortcutRecorder Grid.Row="3" Grid.Column="1" Binding="{Binding ShortcutsHotKey, Mode=TwoWay}" Margin="0,0,0,8" />
+                <Button Grid.Row="3" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="shortcuts" Click="OnResetShortcut" Margin="4,0,0,8" />
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Zoom" Style="{StaticResource RowTitle}" />
+                <views:ShortcutRecorder Grid.Row="4" Grid.Column="1" Binding="{Binding ZoomHotKey, Mode=TwoWay}" />
+                <Button Grid.Row="4" Grid.Column="2" Style="{StaticResource ResetButton}" Tag="zoom" Click="OnResetShortcut" />
               </Grid>
               <TextBlock Foreground="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap" Margin="0,12,0,0"
                          Text="Click a field and press a new combination (needs Ctrl, Alt or Win). Esc cancels." />

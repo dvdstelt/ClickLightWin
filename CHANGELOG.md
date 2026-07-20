@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-07-16
+
+### Added
+
+- A configurable **Ctrl+Shift+K** hotkey that toggles the live keyboard-shortcut display.
+- An on-screen badge that announces the current mode (color-coded) when you use the
+  toggle hotkey.
+- **Screen zoom** (default **Ctrl+Shift+Z**): a ZoomIt-style full-screen zoom that
+  freezes the monitor under the cursor and lets you scroll to zoom (up to 6×) and move
+  the mouse to pan, keeping the point under the cursor fixed. Scrolling all the way
+  back out, Esc, right-click, or the hotkey again exits. The hotkey is configurable.
+
+### Changed
+
+- The toggle hotkey now **cycles Off → ClickLight → Laser Pointer** instead of a plain
+  on/off toggle.
+
 ## [1.5.0] - 2026-07-16
 
 ### Added
@@ -134,7 +151,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release: fading click pulses drawn at the cursor, a system-tray
   presence, a transparent click-through overlay, and a system-wide mouse hook.
 
-[Unreleased]: https://github.com/dvdstelt/ClickLightWin/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/dvdstelt/ClickLightWin/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/dvdstelt/ClickLightWin/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/dvdstelt/ClickLightWin/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/dvdstelt/ClickLightWin/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/dvdstelt/ClickLightWin/compare/v1.2.0...v1.3.0

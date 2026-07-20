@@ -16,6 +16,9 @@
     <StackPanel x:Name="ShortcutStack" IsHitTestVisible="False"
                 HorizontalAlignment="Center" VerticalAlignment="Bottom"
                 Margin="0,0,0,64" />
+    <!-- Mode switch badge: a transient color-coded toast at the top-center. -->
+    <Grid x:Name="ModeHost" IsHitTestVisible="False"
+          HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,52,0,0" />
     <!-- Draw-mode indicator: a border + badge shown while click-through is off. -->
     <Border x:Name="DrawModeBorder" IsHitTestVisible="False" Visibility="Collapsed"
             BorderBrush="#FF2905" BorderThickness="3" Background="Transparent">

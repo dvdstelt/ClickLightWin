@@ -17,6 +17,7 @@ On each click, a short animated pulse is drawn at the cursor and fades out. The 
 - Click highlights across macOS apps
 - Separate visuals for press, release, right-click, and drag
 - Optional laser pointer mode with drawing mode
+- Screen zoom: freeze and magnify the display ZoomIt-style (scroll to zoom, move to pan)
 - Optional keyboard shortcuts
 - Local daily click activity chart with a resettable seven-day history
 - Dedicated settings window with presets, profiles, and a sidebar preview pad with Randomize
@@ -38,7 +39,9 @@ ClickLight includes one default global shortcut for quick toggles during demos. 
 
 | Shortcut | Action |
 | --- | --- |
-| `Control + Shift + L` | Toggle ClickLight on/off |
+| `Control + Shift + L` | Cycle mode: off -> ClickLight -> laser pointer |
+| `Control + Shift + Z` | Screen zoom (scroll to zoom, move to pan; scroll out, Esc, or right-click to exit) |
+| `Control + Shift + K` | Toggle the keyboard-shortcut display |
 | `Control + Shift + D` | Toggle drawing mode, cleared by exiting drawing mode. |
 | `Control + Shift + left-click` & drag | Draw an arrow |
 | `Control + Shift + right-click` & drag | Draw a box |
