@@ -10,7 +10,7 @@ On each click, a short animated pulse is drawn at the cursor and fades out. The 
 
 ## Demo
 
--- soon --
+https://github.com/user-attachments/assets/991eb968-ec27-43ba-8917-49c38b4d565c
 
 ## Features
 
